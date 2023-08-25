@@ -30,6 +30,8 @@ public class PaceManTracker {
 
     private void tick() {
         if (!this.shouldRun()) {
+            // No activity to be done if disabled
+            return;
         }
 
         // TODO: Main tracker loop logic
