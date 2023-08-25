@@ -1,0 +1,70 @@
+plugins {
+    id 'java'
+}
+
+group = project.maven_group
+version = project.plugin_version
+archivesBaseName = project.archives_base_name
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url "https://www.jetbrains.com/intellij-repository/releases" }
+}
+
+configurations {
+    // provided configuration defines configurations which should also be included in the jar
+    provided
+    implementation.extendsFrom(provided)
+    nothing
+    implementation.extendsFrom(nothing)
+}
+
+dependencies {
+    // Choose Julti version: https://jitpack.io/#DuncanRuns/Julti/
+    implementation 'com.github.DuncanRuns:Julti:7d290437c1'
+
+    provided 'com.jetbrains.intellij.java:java-gui-forms-rt:203.7148.30'
+
+    provided 'com.google.code.gson:gson:2.10'
+
+    provided 'com.formdev:flatlaf:3.0'
+}
+
+
+processResources {
+    // Totally stolen from Fabric
+    inputs.property "version", project.version
+
+    filesMatching("julti.plugin.json") {
+        expand "version": project.version
+    }
+}
+
+jar {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    manifest {
+        attributes 'Main-Class': 'gg.paceman.tracker.launching.PaceManTrackerJarLaunch',
+                'Multi-Release': true
+    }
+
+    // Include dependencies marked as provided
+    from configurations.provided.asFileTree.files.collect { zipTree(it) }
+    // Main jar is not a plugin
+    exclude "julti.plugin.json"
+}
+
+tasks.register('pluginJar', Jar) {
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+    archiveBaseName = "${project.archives_base_name}-plugin"
+    from sourceSets.main.output
+}
+
+tasks.register('buildJars') {
+    dependsOn 'build'
+    dependsOn 'pluginJar'
+    tasks.named('build').get().mustRunAfter 'pluginJar'
+}
