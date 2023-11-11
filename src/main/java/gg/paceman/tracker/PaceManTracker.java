@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  */
 public class PaceManTracker {
     private static final PaceManTracker INSTANCE = new PaceManTracker();
-    private static final EventFileTracker EFR = new EventFileTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("event.latest").toAbsolutePath());
+    private static final EventFileTracker EFT = new EventFileTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("event.latest").toAbsolutePath());
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
@@ -49,7 +49,7 @@ public class PaceManTracker {
         }
 
         try {
-            if (!EFR.update()) {
+            if (!EFT.update()) {
                 return;
             }
         } catch (IOException e) {
@@ -57,12 +57,12 @@ public class PaceManTracker {
             return;
         }
 
-        if (EFR.hasHeaderChanged()) {
+        if (EFT.hasHeaderChanged()) {
             // log("New Header: " + EFR.getCurrentHeader());
             // TODO: send new header
         }
 
-        List<String> latestNewLines = EFR.getLatestNewLines();
+        List<String> latestNewLines = EFT.getLatestNewLines();
         if (latestNewLines.isEmpty()) {
             return;
         }
