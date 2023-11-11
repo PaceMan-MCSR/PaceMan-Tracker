@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  */
 public class PaceManTracker {
     private static final PaceManTracker INSTANCE = new PaceManTracker();
-    private static final EventFileTracker EFT = new EventFileTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("event.latest").toAbsolutePath());
+    private static final EventFileTracker EFT = new EventFileTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("events.latest").toAbsolutePath());
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
