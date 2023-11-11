@@ -4,6 +4,8 @@ import com.google.common.io.Resources;
 import gg.paceman.tracker.PaceManTracker;
 import gg.paceman.tracker.PaceManTrackerOptions;
 import gg.paceman.tracker.gui.PaceManTrackerGUI;
+import org.apache.logging.log4j.Level;
+import xyz.duncanruns.julti.Julti;
 import xyz.duncanruns.julti.JultiAppLaunch;
 import xyz.duncanruns.julti.gui.JultiGUI;
 import xyz.duncanruns.julti.gui.PluginsGUI;
@@ -38,6 +40,8 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
             throw new RuntimeException(e);
         }
         PaceManTracker tracker = PaceManTracker.getInstance();
+        tracker.logConsumer = m -> Julti.log(Level.INFO, m);
+        tracker.errorConsumer = m -> Julti.log(Level.ERROR, m);
         tracker.start(true);
         PluginEvents.RunnableEventType.STOP.register(tracker::stop);
     }
