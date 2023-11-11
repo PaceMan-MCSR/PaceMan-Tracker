@@ -58,7 +58,7 @@ public class PaceManTracker {
         }
 
         if (EFT.hasHeaderChanged()) {
-            // log("New Header: " + EFR.getCurrentHeader());
+            // log("New Header: " + EFT.getCurrentHeader());
             // TODO: send new header
         }
 
@@ -73,7 +73,6 @@ public class PaceManTracker {
         // Access key can be obtained through PaceManTrackerOptions.getInstance().accessKey
     }
 
-    //
     public void stop() {
         // Wait for and shutdown executor
         this.executor.shutdownNow();
