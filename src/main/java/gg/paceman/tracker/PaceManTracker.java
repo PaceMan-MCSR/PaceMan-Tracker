@@ -1,5 +1,7 @@
 package gg.paceman.tracker;
 
+import gg.paceman.tracker.util.ExceptionUtil;
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -14,37 +16,50 @@ import java.util.function.Consumer;
 public class PaceManTracker {
     private static final PaceManTracker INSTANCE = new PaceManTracker();
 
+    public static Consumer<String> logConsumer = System.out::println;
+    public static Consumer<String> errorConsumer = System.out::println;
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("events.latest").toAbsolutePath());
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
-    public Consumer<String> logConsumer = System.out::println;
-    public Consumer<String> errorConsumer = System.out::println;
 
     public static PaceManTracker getInstance() {
         return INSTANCE;
+    }
+
+    public static void log(String message) {
+        logConsumer.accept(message);
+    }
+
+    public static void logError(String error) {
+        errorConsumer.accept(error);
     }
 
     private boolean shouldRun() {
         return !this.asPlugin || PaceManTrackerOptions.getInstance().enabledForPlugin;
     }
 
-    public void log(String message) {
-        this.logConsumer.accept(message);
-    }
-
-    public void logError(String error) {
-        this.errorConsumer.accept(error);
-    }
-
     public void start(boolean asPlugin) {
         this.asPlugin = asPlugin;
         // Run tick every 1 second
-        this.executor.scheduleAtFixedRate(this::tick, 0, 1, TimeUnit.SECONDS);
+        this.executor.scheduleAtFixedRate(this::tryTick, 0, 1, TimeUnit.SECONDS);
+    }
+
+    private void tryTick() {
+        try {
+            Thread.currentThread().setName("paceman-tracker");
+            this.tick();
+        } catch (Throwable t) {
+            if (!this.asPlugin) {
+                ExceptionUtil.showExceptionAndExit(t, "Paceman Tracker has crashed! Please report this bug to the developers.\n" + t);
+            } else {
+                String detailedString = ExceptionUtil.toDetailedString(t);
+                logError("Exception in Paceman Tracker: " + detailedString);
+            }
+        }
     }
 
     private void tick() {
         if (!this.shouldRun()) {
-            // No activity to be done if disabled
             return;
         }
 
@@ -53,12 +68,12 @@ public class PaceManTracker {
                 return;
             }
         } catch (IOException e) {
-            this.logError(e.toString());
+            logError("Exception while updating event tracker: " + e);
             return;
         }
 
         if (this.eventTracker.hasHeaderChanged()) {
-            // this.log("New Header: " + this.eventTracker.getCurrentHeader());
+            // log("New Header: " + this.eventTracker.getCurrentHeader());
             // TODO: send new header
         }
 
@@ -67,7 +82,7 @@ public class PaceManTracker {
             return;
         }
 
-        // this.log("New Lines: " + latestNewLines);
+        // log("New Lines: " + latestNewLines);
         // TODO send new latest lines
 
         // Access key can be obtained through PaceManTrackerOptions.getInstance().accessKey

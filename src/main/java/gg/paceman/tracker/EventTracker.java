@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class EventTracker {
     private final Path globalFile;
-    private Path eventLogPath;
+    private Path eventLogPath = null;
 
     private long lastMod = -1;
     private long readProgress = 0;
@@ -64,6 +64,9 @@ public class EventTracker {
         while (!this.tryCheckHeader()) {
             sleep(5);
         }
+        if (this.eventLogPath == null || !Files.exists(this.eventLogPath)) {
+            return false;
+        }
         while (!this.tryUpdateNewLines()) {
             sleep(5);
         }
@@ -110,16 +113,23 @@ public class EventTracker {
         }
         newHeader = newHeader.trim();
         if (!newHeader.equals(this.currentHeader)) {
-            this.loadNewHeader(newHeader);
+            this.tryLoadNewHeader(newHeader);
         }
         return true;
     }
 
-    private void loadNewHeader(String newHeader) {
-        this.headerChanged = true;
-        this.currentHeader = newHeader;
+    private void tryLoadNewHeader(String newHeader) {
+        JsonObject json;
+        try {
+            json = new Gson().fromJson(newHeader, JsonObject.class);
+        } catch (Exception e) {
+            PaceManTracker.logError("Error converting global file to json: " + e);
+            this.eventLogPath = null;
+            return;
+        }
 
-        JsonObject json = new Gson().fromJson(newHeader, JsonObject.class);
+        this.currentHeader = newHeader;
+        this.headerChanged = true;
         this.eventLogPath = Paths.get(json.get("world_path").getAsString()).resolve("speedrunigt").resolve("events.log");
         this.readProgress = 0;
     }
