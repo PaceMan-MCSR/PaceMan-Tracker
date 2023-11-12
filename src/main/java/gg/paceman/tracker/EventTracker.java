@@ -1,26 +1,32 @@
 package gg.paceman.tracker;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class EventFileTracker {
-    private final Path eventFilePath;
+public class EventTracker {
+    private final Path globalFile;
+    private Path eventLogPath;
 
-    private long lastMTime = -1;
+    private long lastMod = -1;
     private long readProgress = 0;
     private String currentHeader = "";
     private boolean headerChanged = false;
     private List<String> latestNewLines = Collections.emptyList();
 
-    public EventFileTracker(Path eventFilePath) {
-        this.eventFilePath = eventFilePath;
+    public EventTracker(Path globalFile) {
+        this.globalFile = globalFile;
     }
 
     private static void sleep(long millis) {
@@ -48,27 +54,26 @@ public class EventFileTracker {
     }
 
     public boolean update() throws IOException {
-        if (!Files.exists(this.eventFilePath)) {
+        if (!Files.exists(this.globalFile)) {
             return false;
         }
-        long newMTime = Files.getLastModifiedTime(this.eventFilePath).toMillis();
-        if (newMTime == this.lastMTime) {
+        long newLM = Files.getLastModifiedTime(this.globalFile).toMillis();
+        if (newLM == this.lastMod) {
             return false;
         }
-        this.lastMTime = newMTime;
+        this.lastMod = newLM;
         while (!this.tryCheckHeader()) {
             sleep(5);
         }
         while (!this.tryUpdateNewLines()) {
             sleep(5);
         }
-
         return true;
     }
 
     private boolean tryUpdateNewLines() throws IOException {
         String newContents;
-        try (InputStream inputStream = Files.newInputStream(this.eventFilePath)) {
+        try (InputStream inputStream = Files.newInputStream(this.eventLogPath)) {
             inputStream.skip(this.readProgress);
             long newReadProgress = this.readProgress;
             List<Byte> byteList = new ArrayList<>();
@@ -101,13 +106,11 @@ public class EventFileTracker {
 
     private boolean tryCheckHeader() throws IOException {
         String newHeader;
-        int headerLength = 0;
-        try (InputStream inputStream = Files.newInputStream(this.eventFilePath)) {
+        try (InputStream inputStream = Files.newInputStream(this.globalFile)) {
             List<Byte> byteList = new ArrayList<>();
             int next;
             while ((next = inputStream.read()) != '\n' && next != -1) {
                 byteList.add((byte) next);
-                headerLength++;
             }
             if (next != '\n') {
                 return false;
@@ -119,10 +122,17 @@ public class EventFileTracker {
             newHeader = new String(bytes);
         }
         if (!newHeader.equals(this.currentHeader)) {
-            this.headerChanged = true;
-            this.currentHeader = newHeader;
-            this.readProgress = headerLength;
+            this.loadNewHeader(newHeader);
         }
         return true;
+    }
+
+    private void loadNewHeader(String newHeader) {
+        this.headerChanged = true;
+        this.currentHeader = newHeader;
+
+        JsonObject json = new Gson().fromJson(newHeader, JsonObject.class);
+        this.eventLogPath = Paths.get(json.get("world_path").getAsString()).resolve("speedrunigt").resolve("events.log");
+        this.readProgress = 0;
     }
 }

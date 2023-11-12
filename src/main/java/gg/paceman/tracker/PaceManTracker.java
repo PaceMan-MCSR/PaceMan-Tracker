@@ -13,8 +13,8 @@ import java.util.function.Consumer;
  */
 public class PaceManTracker {
     private static final PaceManTracker INSTANCE = new PaceManTracker();
-    private static final EventFileTracker EFT = new EventFileTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("events.latest").toAbsolutePath());
 
+    private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("events.latest").toAbsolutePath());
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
     public Consumer<String> logConsumer = System.out::println;
@@ -49,7 +49,7 @@ public class PaceManTracker {
         }
 
         try {
-            if (!EFT.update()) {
+            if (!this.eventTracker.update()) {
                 return;
             }
         } catch (IOException e) {
@@ -57,17 +57,17 @@ public class PaceManTracker {
             return;
         }
 
-        if (EFT.hasHeaderChanged()) {
-            // log("New Header: " + EFT.getCurrentHeader());
+        if (this.eventTracker.hasHeaderChanged()) {
+            // this.log("New Header: " + this.eventTracker.getCurrentHeader());
             // TODO: send new header
         }
 
-        List<String> latestNewLines = EFT.getLatestNewLines();
+        List<String> latestNewLines = this.eventTracker.getLatestNewLines();
         if (latestNewLines.isEmpty()) {
             return;
         }
 
-        // log("New Lines: " + latestNewLines);
+        // this.log("New Lines: " + latestNewLines);
         // TODO send new latest lines
 
         // Access key can be obtained through PaceManTrackerOptions.getInstance().accessKey
