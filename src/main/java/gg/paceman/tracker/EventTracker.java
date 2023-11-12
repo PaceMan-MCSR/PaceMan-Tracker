@@ -2,7 +2,6 @@ package gg.paceman.tracker;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
