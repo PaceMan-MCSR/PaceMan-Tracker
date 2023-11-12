@@ -18,7 +18,7 @@ public class PaceManTracker {
 
     public static Consumer<String> logConsumer = System.out::println;
     public static Consumer<String> errorConsumer = System.out::println;
-    private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("events.latest").toAbsolutePath());
+    private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
 
