@@ -104,22 +104,11 @@ public class EventTracker {
     }
 
     private boolean tryCheckHeader() throws IOException {
-        String newHeader;
-        try (InputStream inputStream = Files.newInputStream(this.globalFile)) {
-            List<Byte> byteList = new ArrayList<>();
-            int next;
-            while ((next = inputStream.read()) != '\n' && next != -1) {
-                byteList.add((byte) next);
-            }
-            if (next != '\n') {
-                return false;
-            }
-            byte[] bytes = new byte[byteList.size()];
-            for (int i = 0; i < bytes.length; i++) {
-                bytes[i] = byteList.get(i);
-            }
-            newHeader = new String(bytes);
+        String newHeader = new String(Files.readAllBytes(this.globalFile));
+        if (!newHeader.endsWith("\n")) {
+            return false;
         }
+        newHeader = newHeader.trim();
         if (!newHeader.equals(this.currentHeader)) {
             this.loadNewHeader(newHeader);
         }
