@@ -69,7 +69,7 @@ public class PacemanGGUtil {
             }
         }
         // At this point it has gone through all tries without succeeding or receiving a bad response code.
-        throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + " due to an error attempting to send for each of the " + TOTAL_TRIES + " attempts.");
+        throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + " due to an error attempting to send for each of the " + TOTAL_TRIES + " attempts");
     }
 
     private static String sha256Hash(String input) {
