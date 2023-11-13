@@ -122,7 +122,8 @@ public class PaceManTracker {
                 }
                 this.runProgress = RunProgress.ENDED;
                 break;
-            } else if (START_EVENTS.contains(eventName)) {
+            } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
+                log("PaceMan Tracker start event reached, now sending to paceman.gg");
                 this.runProgress = RunProgress.PACING;
             }
         }
