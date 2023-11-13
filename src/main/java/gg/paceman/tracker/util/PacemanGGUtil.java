@@ -34,7 +34,7 @@ public class PacemanGGUtil {
             gameData.addProperty("worldId", worldId);
             gameData.addProperty("gameVersion", gameVersion);
             gameData.addProperty("category", category);
-            gameData.add("mods", mods);
+            gameData.add("modList", mods);
 
             eventModelInput.add("gameData", gameData);
         }
