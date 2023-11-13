@@ -65,6 +65,7 @@ public class PacemanGGUtil {
             } else {
                 // erm throw the bad code to the user who will throw it at the dev
                 throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + ", response code " + response);
+                // TODO: Implement response code checks (like 401 == invalid auth or some shit like that)
             }
         }
         // At this point it has gone through all tries without succeeding or receiving a bad response code.
