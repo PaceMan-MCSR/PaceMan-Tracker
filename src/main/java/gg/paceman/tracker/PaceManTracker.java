@@ -55,7 +55,11 @@ public class PaceManTracker {
     }
 
     private boolean shouldRun() {
-        return !this.asPlugin || PaceManTrackerOptions.getInstance().enabledForPlugin;
+        PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+        if (options.accessKey.isEmpty()) {
+            return false;
+        }
+        return !this.asPlugin || options.enabledForPlugin;
     }
 
     public void start(boolean asPlugin) {
