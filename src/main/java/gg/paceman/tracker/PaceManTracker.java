@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,7 +24,7 @@ public class PaceManTracker {
     // If events have already been sent for this run, then send the end event and then send no more events
     private static final List<String> END_EVENTS = Arrays.asList("common.open_to_lan", "common.enable_cheats", "common.view_seed", "rsg.credits");
     // If any start event is reached for the first time for this run, enable sending events for this run, send the header and all events so far.
-    private static final List<String> START_EVENTS = Arrays.asList("rsg.enter_bastion", "rsg.enter_fortress");
+    private static final List<String> START_EVENTS = Collections.singletonList("rsg.enter_nether");
 
     public static Consumer<String> logConsumer = System.out::println;
     public static Consumer<String> debugConsumer = System.out::println;
