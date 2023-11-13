@@ -15,11 +15,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class PacemanGGUtil {
-    private static final String PACEMANGG_ENDPOINT = "https://paceman.gg/api/sendevent"; //TODO: real endpoint
+    private static final String PACEMANGG_ENDPOINT = "https://paceman.gg/api/sendevent";
     private static final int SUCCESS_RESPONSE = 201;
     private static final int TOTAL_TRIES = 5;
 
-    public static void sendToPacemanGG(String accessKey, String latestWorldContents, List<String> events) throws IOException {
+    public static void sendToPacemanGG(String accessKey, String latestWorldContents, List<String> events) {
         JsonObject eventModelInput = new JsonObject();
         eventModelInput.addProperty("accessKey", accessKey);
 
@@ -43,22 +43,32 @@ public class PacemanGGUtil {
         events.forEach(eventList::add);
         eventModelInput.add("eventList", eventList);
 
-        String inputString = eventModelInput.toString();
-        PaceManTracker.logDebug("Sending: " + inputString);
+        String toSend = eventModelInput.toString();
+        sendToPacemanGG(toSend);
+    }
+
+    private static void sendToPacemanGG(String toSend) {
+        PaceManTracker.logDebug("Sending: " + toSend);
 
         for (int i = 0; i < TOTAL_TRIES; i++) {
-            int response = sendData(PACEMANGG_ENDPOINT, inputString);
+            int response;
+            try {
+                response = sendData(PACEMANGG_ENDPOINT, toSend);
+            } catch (IOException e) {
+                PaceManTracker.logDebug("Request timed out or ran into an exception, retrying...");
+                continue; // retries on timeout or other exceptions
+            }
+
             if (response == SUCCESS_RESPONSE) {
                 PaceManTracker.logDebug("Sent successfully");
                 return;
             } else {
-                boolean fullyFailed = i == (TOTAL_TRIES - 1);
-                PaceManTracker.logDebug("Response code " + response + (fullyFailed ? ", failed to send." : ", trying again..."));
-                if (fullyFailed) {
-                    throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + " after " + TOTAL_TRIES + " tries.");
-                }
+                // erm throw the bad code to the user who will throw it at the dev
+                throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + ", response code " + response);
             }
         }
+        // At this point it has gone through all tries without succeeding or receiving a bad response code.
+        throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + " due to an error attempting to send for each of the " + TOTAL_TRIES + " attempts.");
     }
 
     private static String sha256Hash(String input) {

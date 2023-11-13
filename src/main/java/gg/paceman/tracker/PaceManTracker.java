@@ -22,7 +22,6 @@ public class PaceManTracker {
     // If any end events are reached and no events have been sent for the current run, then prevent sending anything.
     // If events have already been sent for this run, then send the end event and then send no more events
     private static final List<String> END_EVENTS = Arrays.asList("common.open_to_lan", "common.enable_cheats", "common.view_seed", "rsg.credits");
-    // Test end events (allows open to lan and stuff): Arrays.asList("common.view_seed", "rsg.credits");
     // If any start event is reached for the first time for this run, enable sending events for this run, send the header and all events so far.
     private static final List<String> START_EVENTS = Arrays.asList("rsg.enter_bastion", "rsg.enter_fortress");
 
@@ -132,13 +131,9 @@ public class PaceManTracker {
     }
 
     private void dumpToPacemanGG() {
-        try {
-            PacemanGGUtil.sendToPacemanGG(PaceManTrackerOptions.getInstance().accessKey, this.headerToSend, this.eventsToSend);
-            this.headerToSend = null;
-            this.eventsToSend.clear();
-        } catch (IOException e) {
-            logError("Error while trying to send to PacemanGG: " + ExceptionUtil.toDetailedString(e));
-        }
+        PacemanGGUtil.sendToPacemanGG(PaceManTrackerOptions.getInstance().accessKey, this.headerToSend, this.eventsToSend);
+        this.headerToSend = null;
+        this.eventsToSend.clear();
     }
 
     public void stop() {
