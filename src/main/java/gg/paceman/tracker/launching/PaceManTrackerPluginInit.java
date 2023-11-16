@@ -23,7 +23,7 @@ import java.nio.charset.Charset;
 public class PaceManTrackerPluginInit implements PluginInitializer {
     public static void main(String[] args) throws IOException {
         // This is only used to test the plugin in the dev environment
-        // ExamplePlugin.main itself is never used when users run Julti
+        // PaceManTrackerPluginInit.main itself is never used when users run Julti
 
         // Run this in dev to test as Julti plugin
 
