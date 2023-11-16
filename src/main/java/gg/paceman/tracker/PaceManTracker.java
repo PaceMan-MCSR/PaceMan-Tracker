@@ -134,6 +134,9 @@ public class PaceManTracker {
 
     private void dumpToPacemanGG() {
         PacemanGGUtil.sendToPacemanGG(PaceManTrackerOptions.getInstance().accessKey, this.headerToSend, this.eventsToSend);
+        logDebug("Dumping to paceman:");
+        logDebug("    Header: " + this.headerToSend);
+        logDebug("    Events: " + this.eventsToSend);
         this.headerToSend = null;
         this.eventsToSend.clear();
     }
