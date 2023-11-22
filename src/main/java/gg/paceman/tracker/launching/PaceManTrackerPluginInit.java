@@ -40,9 +40,9 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
             throw new RuntimeException(e);
         }
         PaceManTracker tracker = PaceManTracker.getInstance();
-        PaceManTracker.logConsumer = m -> Julti.log(Level.INFO, m);
-        PaceManTracker.debugConsumer = m -> Julti.log(Level.DEBUG, m);
-        PaceManTracker.errorConsumer = m -> Julti.log(Level.ERROR, m);
+        PaceManTracker.logConsumer = m -> Julti.log(Level.INFO, "(PaceMan Tracker) "+m);
+        PaceManTracker.debugConsumer = m -> Julti.log(Level.DEBUG, "(PaceMan Tracker) "+m);
+        PaceManTracker.errorConsumer = m -> Julti.log(Level.ERROR, "(PaceMan Tracker) "+m);
         tracker.start(true);
         PluginEvents.RunnableEventType.STOP.register(tracker::stop);
     }

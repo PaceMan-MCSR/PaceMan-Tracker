@@ -3,7 +3,6 @@ package gg.paceman.tracker.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import gg.paceman.tracker.PaceManTracker;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,10 +15,9 @@ import java.util.List;
 
 public class PacemanGGUtil {
     private static final String PACEMANGG_ENDPOINT = "https://paceman.gg/api/sendevent";
-    private static final int SUCCESS_RESPONSE = 201;
-    private static final int TOTAL_TRIES = 5;
+    private static final int SUCCESS_RESPONSE_CODE = 201;
 
-    public static void sendToPacemanGG(String accessKey, String latestWorldContents, List<String> events) {
+    public static PaceManResponse sendToPacemanGG(String accessKey, String latestWorldContents, List<String> events, long timeSinceRunStart) {
         JsonObject eventModelInput = new JsonObject();
         eventModelInput.addProperty("accessKey", accessKey);
 
@@ -43,33 +41,25 @@ public class PacemanGGUtil {
         events.forEach(eventList::add);
         eventModelInput.add("eventList", eventList);
 
+        eventModelInput.addProperty("timeSinceRunStart", timeSinceRunStart);
+
         String toSend = eventModelInput.toString();
-        sendToPacemanGG(toSend);
+        return sendToPacemanGG(toSend);
     }
 
-    private static void sendToPacemanGG(String toSend) {
-        PaceManTracker.logDebug("Sending: " + toSend);
-
-        for (int i = 0; i < TOTAL_TRIES; i++) {
-            int response;
-            try {
-                response = sendData(PACEMANGG_ENDPOINT, toSend);
-            } catch (IOException e) {
-                PaceManTracker.logDebug("Request timed out or ran into an exception, retrying...");
-                continue; // retries on timeout or other exceptions
-            }
-
-            if (response == SUCCESS_RESPONSE) {
-                PaceManTracker.logDebug("Sent successfully");
-                return;
-            } else {
-                // erm throw the bad code to the user who will throw it at the dev
-                throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + ", response code " + response);
-                // TODO: Implement response code checks (like 401 == invalid auth or some shit like that)
-            }
+    private static PaceManResponse sendToPacemanGG(String toSend) {
+        int response;
+        try {
+            response = sendData(PACEMANGG_ENDPOINT, toSend);
+        } catch (IOException e) {
+            return PaceManResponse.SEND_ERROR;
         }
-        // At this point it has gone through all tries without succeeding or receiving a bad response code.
-        throw new RuntimeException("Failed to send to " + PACEMANGG_ENDPOINT + " due to an error attempting to send for each of the " + TOTAL_TRIES + " attempts");
+
+        if (response == SUCCESS_RESPONSE_CODE) {
+            return PaceManResponse.SUCCESS;
+        } else {
+            return PaceManResponse.DENIED;
+        }
     }
 
     private static String sha256Hash(String input) {
@@ -118,5 +108,11 @@ public class PacemanGGUtil {
                 connection.disconnect();
             }
         }
+    }
+
+    public enum PaceManResponse {
+        SUCCESS, // 201 response
+        DENIED, // non 201 response
+        SEND_ERROR // error while trying to send
     }
 }

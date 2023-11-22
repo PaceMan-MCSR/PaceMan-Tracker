@@ -2,12 +2,14 @@ package gg.paceman.tracker;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import gg.paceman.tracker.util.SleepUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,6 +22,7 @@ public class EventTracker {
 
     private long lastMod = -1;
     private long readProgress = 0;
+    private long eventsLogCreation = -1;
     private String currentHeader = "";
     private boolean headerChanged = false;
     private List<String> latestNewLines = Collections.emptyList();
@@ -28,12 +31,8 @@ public class EventTracker {
         this.globalFile = globalFile;
     }
 
-    private static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public long getEventsLogCreationMillis() {
+        return this.eventsLogCreation;
     }
 
     public List<String> getLatestNewLines() {
@@ -62,13 +61,13 @@ public class EventTracker {
         }
         this.lastMod = newLM;
         while (!this.tryCheckHeader()) {
-            sleep(5);
+            SleepUtil.sleep(5);
         }
         if (this.eventLogPath == null || !Files.exists(this.eventLogPath)) {
             return false;
         }
         while (!this.tryUpdateNewLines()) {
-            sleep(5);
+            SleepUtil.sleep(5);
         }
         return true;
     }
@@ -103,6 +102,9 @@ public class EventTracker {
         }
         // For each string split between newlines, trim, filter out empties, and collect to list.
         this.latestNewLines = Arrays.stream(newContents.split("\n")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+        if (this.eventsLogCreation == -1) {
+            this.updateCreationTime();
+        }
         return true;
     }
 
@@ -118,7 +120,7 @@ public class EventTracker {
         return true;
     }
 
-    private void tryLoadNewHeader(String newHeader) {
+    private void tryLoadNewHeader(String newHeader) throws IOException {
         JsonObject json;
         try {
             json = new Gson().fromJson(newHeader, JsonObject.class);
@@ -132,5 +134,15 @@ public class EventTracker {
         this.headerChanged = true;
         this.eventLogPath = Paths.get(json.get("world_path").getAsString()).resolve("speedrunigt").resolve("events.log");
         this.readProgress = 0;
+        this.updateCreationTime();
+    }
+
+    private void updateCreationTime() throws IOException {
+        if (Files.exists(this.eventLogPath)) {
+            BasicFileAttributes eventsLogAttributes = Files.readAttributes(this.eventLogPath, BasicFileAttributes.class);
+            this.eventsLogCreation = eventsLogAttributes.creationTime().toMillis();
+        } else {
+            this.eventsLogCreation = -1;
+        }
     }
 }
