@@ -3,7 +3,7 @@ plugins {
 }
 
 group = project.maven_group
-version = project.plugin_version
+version = project.version
 archivesBaseName = project.archives_base_name
 
 sourceCompatibility = JavaVersion.VERSION_1_8
