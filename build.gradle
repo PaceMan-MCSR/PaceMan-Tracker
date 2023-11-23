@@ -19,8 +19,6 @@ configurations {
     // provided configuration defines configurations which should also be included in the jar
     provided
     implementation.extendsFrom(provided)
-    nothing
-    implementation.extendsFrom(nothing)
 }
 
 dependencies {
