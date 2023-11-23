@@ -23,7 +23,7 @@ public class PaceManTracker {
 
     // If any end events are reached and no events have been sent for the current run, then prevent sending anything.
     // If events have already been sent for this run, then send the end event and then send no more events
-    private static final List<String> END_EVENTS = Arrays.asList("common.view_seed", "rsg.credits");
+    private static final List<String> END_EVENTS = Arrays.asList("common.open_to_lan","common.enable_cheats","common.view_seed", "rsg.credits");
     // If any start event is reached for the first time for this run, enable sending events for this run, send the header and all events so far.
     private static final List<String> START_EVENTS = Collections.singletonList("rsg.enter_nether");
     // Unimportant events are not considered when determining if an event is recent enough to send the run to PaceMan
@@ -167,9 +167,7 @@ public class PaceManTracker {
 
     private void dumpToPacemanGG() {
         logDebug("Dumping to paceman:");
-        logDebug("    Header: " + this.headerToSend);
-        logDebug("    Events: " + this.eventsToSend);
-        PacemanGGUtil.PaceManResponse response = null;
+        PacemanGGUtil.PaceManResponse response;
         int tries = 0;
         // While sending gives back an error
         while (PacemanGGUtil.PaceManResponse.SEND_ERROR == (

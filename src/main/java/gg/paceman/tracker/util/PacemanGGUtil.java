@@ -3,6 +3,7 @@ package gg.paceman.tracker.util;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import gg.paceman.tracker.PaceManTracker;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -48,9 +49,11 @@ public class PacemanGGUtil {
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
+        PaceManTracker.logDebug("Sending exactly: " + toSend);
         int response;
         try {
             response = sendData(PACEMANGG_ENDPOINT, toSend);
+            PaceManTracker.logDebug("Response Code " + response);
         } catch (IOException e) {
             return PaceManResponse.SEND_ERROR;
         }
