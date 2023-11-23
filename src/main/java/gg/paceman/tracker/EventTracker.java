@@ -22,7 +22,7 @@ public class EventTracker {
 
     private long lastMod = -1;
     private long readProgress = 0;
-    private long eventsLogCreation = -1;
+    private long runStartTime = -1;
     private String currentHeader = "";
     private boolean headerChanged = false;
     private List<String> latestNewLines = Collections.emptyList();
@@ -31,8 +31,9 @@ public class EventTracker {
         this.globalFile = globalFile;
     }
 
-    public long getEventsLogCreationMillis() {
-        return this.eventsLogCreation;
+    public long getRunStartTime() {
+        // Returns the first event time minus its stored realtime, giving the run start time
+        return this.runStartTime;
     }
 
     public List<String> getLatestNewLines() {
@@ -102,8 +103,11 @@ public class EventTracker {
         }
         // For each string split between newlines, trim, filter out empties, and collect to list.
         this.latestNewLines = Arrays.stream(newContents.split("\n")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
-        if (this.eventsLogCreation == -1) {
-            this.updateCreationTime();
+        if (this.runStartTime == -1 && !this.latestNewLines.isEmpty()) {
+            BasicFileAttributes eventsLogAttributes = Files.readAttributes(this.eventLogPath, BasicFileAttributes.class);
+            long eventsLogCreation = eventsLogAttributes.creationTime().toMillis();
+            long firstEventRealTime = Long.parseLong(this.latestNewLines.get(0).split(" ")[1]);
+            this.runStartTime = eventsLogCreation - firstEventRealTime;
         }
         return true;
     }
@@ -134,15 +138,6 @@ public class EventTracker {
         this.headerChanged = true;
         this.eventLogPath = Paths.get(json.get("world_path").getAsString()).resolve("speedrunigt").resolve("events.log");
         this.readProgress = 0;
-        this.updateCreationTime();
-    }
-
-    private void updateCreationTime() throws IOException {
-        if (Files.exists(this.eventLogPath)) {
-            BasicFileAttributes eventsLogAttributes = Files.readAttributes(this.eventLogPath, BasicFileAttributes.class);
-            this.eventsLogCreation = eventsLogAttributes.creationTime().toMillis();
-        } else {
-            this.eventsLogCreation = -1;
-        }
+        this.runStartTime = -1;
     }
 }

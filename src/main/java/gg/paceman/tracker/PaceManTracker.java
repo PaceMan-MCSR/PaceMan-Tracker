@@ -23,7 +23,7 @@ public class PaceManTracker {
 
     // If any end events are reached and no events have been sent for the current run, then prevent sending anything.
     // If events have already been sent for this run, then send the end event and then send no more events
-    private static final List<String> END_EVENTS = Arrays.asList("common.open_to_lan","common.enable_cheats","common.view_seed", "rsg.credits");
+    private static final List<String> END_EVENTS = Arrays.asList("common.open_to_lan", "common.enable_cheats", "common.view_seed", "rsg.credits");
     // If any start event is reached for the first time for this run, enable sending events for this run, send the header and all events so far.
     private static final List<String> START_EVENTS = Collections.singletonList("rsg.enter_nether");
     // Unimportant events are not considered when determining if an event is recent enough to send the run to PaceMan
@@ -84,15 +84,15 @@ public class PaceManTracker {
                 ExceptionUtil.showExceptionAndExit(t, "PaceMan Tracker has crashed! Please report this bug to the developers.\n" + t);
             } else {
                 String detailedString = ExceptionUtil.toDetailedString(t);
-                logError("PaceMan Tracker has crashed! Please report this bug to the developers. " + detailedString);
-                logError("PaceMan Tracker will now shutdown, Julti will need to be restarted to use PaceMan Tracker.");
+                PaceManTracker.logError("PaceMan Tracker has crashed! Please report this bug to the developers. " + detailedString);
+                PaceManTracker.logError("PaceMan Tracker will now shutdown, Julti will need to be restarted to use PaceMan Tracker.");
                 this.stop();
             }
         }
     }
 
     private void setRunProgress(RunProgress runProgress) {
-        logDebug("Run Progress set to " + runProgress);
+        PaceManTracker.logDebug("Run Progress set to " + runProgress);
         this.runProgress = runProgress;
     }
 
@@ -106,7 +106,7 @@ public class PaceManTracker {
                 return;
             }
         } catch (IOException e) {
-            logError("Exception while updating event tracker: " + e);
+            PaceManTracker.logError("Exception while updating event tracker: " + e);
             return;
         }
 
@@ -120,7 +120,7 @@ public class PaceManTracker {
         List<String> latestNewLines = this.eventTracker.getLatestNewLines();
 
         if (this.getTimeSinceRunStart() > RUN_TOO_LONG_MILLIS) {
-            PaceManTracker.logDebug("Run happened too long ago, this run won't be sent to PaceMan.gg");
+            PaceManTracker.logDebug("Run started too long ago, this run won't be sent to PaceMan.gg");
             this.setRunProgress(RunProgress.ENDED);
         }
 
@@ -145,13 +145,14 @@ public class PaceManTracker {
                 this.setRunProgress(RunProgress.ENDED);
                 break;
             } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
-                log("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
+                PaceManTracker.logError("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
                 this.setRunProgress(RunProgress.PACING);
             }
             // Determine if an event is recent enough to dump
             if (!shouldDump && this.runProgress == RunProgress.PACING && !UNIMPORTANT_EVENTS.contains(eventName)) {
-                long timeOfEvent = Long.parseLong(parts[1]) + this.eventTracker.getEventsLogCreationMillis();
-                if (Math.abs(System.currentTimeMillis() - timeOfEvent) < EVENT_RECENT_ENOUGH_MILLIS) {
+                long timeDiff = Math.abs(System.currentTimeMillis() - (Long.parseLong(parts[1]) + this.eventTracker.getRunStartTime()));
+                PaceManTracker.logDebug(String.format("Event %s happened %d milliseconds ago.", eventName, timeDiff));
+                if (timeDiff < EVENT_RECENT_ENOUGH_MILLIS) {
                     shouldDump = true;
                 }
             }
@@ -162,11 +163,11 @@ public class PaceManTracker {
     }
 
     private long getTimeSinceRunStart() {
-        return Math.abs(System.currentTimeMillis() - this.eventTracker.getEventsLogCreationMillis());
+        return Math.abs(System.currentTimeMillis() - this.eventTracker.getRunStartTime());
     }
 
     private void dumpToPacemanGG() {
-        logDebug("Dumping to paceman:");
+        PaceManTracker.logDebug("Dumping to paceman");
         PacemanGGUtil.PaceManResponse response;
         int tries = 0;
         // While sending gives back an error
