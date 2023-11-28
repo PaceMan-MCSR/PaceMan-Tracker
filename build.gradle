@@ -44,7 +44,8 @@ jar {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     manifest {
         attributes 'Main-Class': 'gg.paceman.tracker.launching.PaceManTrackerJarLaunch',
-                'Multi-Release': true
+                'Multi-Release': true,
+                'Implementation-Version': version
     }
 
     // Include dependencies marked as provided

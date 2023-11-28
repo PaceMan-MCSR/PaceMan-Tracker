@@ -19,6 +19,8 @@ public class PaceManTrackerJarLaunch {
         if (!Arrays.asList(args).contains("--nogui")) {
             PaceManTrackerGUI.open(false, null).setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         }
+        PaceManTracker.VERSION = PaceManTrackerJarLaunch.class.getPackage().getImplementationVersion() == null ? "DEV" : PaceManTrackerJarLaunch.class.getPackage().getImplementationVersion();
+        PaceManTracker.log("Running PaceMan Tracker v" + PaceManTracker.VERSION);
         PaceManTracker.getInstance().start(false);
     }
 }

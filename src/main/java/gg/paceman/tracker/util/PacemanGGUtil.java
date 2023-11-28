@@ -18,13 +18,24 @@ public class PacemanGGUtil {
     private static final String PACEMANGG_ENDPOINT = "https://paceman.gg/api/sendevent";
     private static final int SUCCESS_RESPONSE_CODE = 201;
 
-    public static PaceManResponse sendToPacemanGG(String accessKey, String latestWorldContents, List<String> events, long timeSinceRunStart) {
+    public static PaceManResponse sendCancelToPacemanGG(String accessKey) {
+        JsonObject eventModelInput = new JsonObject();
+        // Access Key
+        eventModelInput.addProperty("accessKey", accessKey);
+        // Empty Event List
+        eventModelInput.add("eventList", new JsonArray());
+        // Kill flag
+        eventModelInput.addProperty("kill", true);
+        return PacemanGGUtil.sendToPacemanGG(eventModelInput.toString());
+    }
+
+    public static PaceManResponse sendEventsToPacemanGG(String accessKey, String latestWorldContents, List<String> events, long timeSinceRunStart) {
         JsonObject eventModelInput = new JsonObject();
         eventModelInput.addProperty("accessKey", accessKey);
 
         if (latestWorldContents != null) {
             JsonObject latestWorldJson = new Gson().fromJson(latestWorldContents, JsonObject.class);
-            String worldId = sha256Hash(latestWorldJson.get("world_path").getAsString());
+            String worldId = PacemanGGUtil.sha256Hash(latestWorldJson.get("world_path").getAsString());
             JsonArray mods = latestWorldJson.getAsJsonArray("mods");
             String gameVersion = latestWorldJson.get("version").getAsString();
             String category = latestWorldJson.get("category").getAsString();
@@ -34,6 +45,7 @@ public class PacemanGGUtil {
             gameData.addProperty("gameVersion", gameVersion);
             gameData.addProperty("category", category);
             gameData.add("modList", mods);
+            gameData.addProperty("trackerVersion", PaceManTracker.VERSION);
 
             eventModelInput.add("gameData", gameData);
         }
@@ -45,14 +57,14 @@ public class PacemanGGUtil {
         eventModelInput.addProperty("timeSinceRunStart", timeSinceRunStart);
 
         String toSend = eventModelInput.toString();
-        return sendToPacemanGG(toSend);
+        return PacemanGGUtil.sendToPacemanGG(toSend);
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
         PaceManTracker.logDebug("Sending exactly: " + toSend);
         int response;
         try {
-            response = sendData(PACEMANGG_ENDPOINT, toSend);
+            response = PacemanGGUtil.sendData(PACEMANGG_ENDPOINT, toSend);
             PaceManTracker.logDebug("Response Code " + response);
         } catch (IOException e) {
             return PaceManResponse.SEND_ERROR;

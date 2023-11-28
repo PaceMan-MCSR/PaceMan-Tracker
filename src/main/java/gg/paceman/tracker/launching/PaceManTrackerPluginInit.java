@@ -16,6 +16,7 @@ import xyz.duncanruns.julti.plugin.PluginManager;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Optional;
 
 /**
  * Launches PaceMan Tracker as a Julti Plugin
@@ -27,9 +28,11 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
 
         // Run this in dev to test as Julti plugin
 
-        JultiAppLaunch.launchWithDevPlugin(args, PluginManager.JultiPluginData.fromString(
+        PluginManager.JultiPluginData pluginData = PluginManager.JultiPluginData.fromString(
                 Resources.toString(Resources.getResource(PaceManTrackerPluginInit.class, "/julti.plugin.json"), Charset.defaultCharset())
-        ), new PaceManTrackerPluginInit());
+        );
+        PaceManTracker.VERSION = pluginData.version;
+        JultiAppLaunch.launchWithDevPlugin(args, pluginData, new PaceManTrackerPluginInit());
     }
 
     @Override
@@ -39,10 +42,16 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        PaceManTracker.logConsumer = m -> Julti.log(Level.INFO, "(PaceMan Tracker) " + m);
+        PaceManTracker.debugConsumer = m -> Julti.log(Level.DEBUG, "(PaceMan Tracker) " + m);
+        PaceManTracker.errorConsumer = m -> Julti.log(Level.ERROR, "(PaceMan Tracker) " + m);
+        Optional<PluginManager.LoadedJultiPlugin> pluginData = PluginManager.getPluginManager().getLoadedPlugins().stream().filter(loadedJultiPlugin -> loadedJultiPlugin.pluginData.id.equals("paceman-tracker")).findAny();
+        if (pluginData.isPresent()) {
+            String version = pluginData.get().pluginData.version;
+            PaceManTracker.VERSION = version.equals("${version}") ? "DEV" : version;
+            PaceManTracker.log("Loaded PaceMan Tracker v" + PaceManTracker.VERSION);
+        }
         PaceManTracker tracker = PaceManTracker.getInstance();
-        PaceManTracker.logConsumer = m -> Julti.log(Level.INFO, "(PaceMan Tracker) "+m);
-        PaceManTracker.debugConsumer = m -> Julti.log(Level.DEBUG, "(PaceMan Tracker) "+m);
-        PaceManTracker.errorConsumer = m -> Julti.log(Level.ERROR, "(PaceMan Tracker) "+m);
         tracker.start(true);
         PluginEvents.RunnableEventType.STOP.register(tracker::stop);
     }

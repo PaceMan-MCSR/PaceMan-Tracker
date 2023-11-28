@@ -26,10 +26,10 @@ public final class ExceptionUtil {
     }
 
     public static void showExceptionAndExit(Throwable t, String message) {
-        String detailedException = toDetailedString(t);
+        String detailedException = ExceptionUtil.toDetailedString(t);
         int ans = JOptionPane.showOptionDialog(null, message, "Julti: Crash", JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null, new Object[]{"Copy Error", "OK"}, "Copy Error");
         if (ans == 0) {
-            copyToClipboard("Error during startup or main loop: " + detailedException);
+            ExceptionUtil.copyToClipboard("Error during startup or main loop: " + detailedException);
         }
         LogManager.getLogger("Julti-Crash").error(detailedException); // We don't want to use Julti.log because it has a couple more steps.
         System.exit(1);

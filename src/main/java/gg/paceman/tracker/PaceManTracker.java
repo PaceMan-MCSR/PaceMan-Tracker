@@ -19,6 +19,7 @@ import java.util.function.Consumer;
  * The actual logic and stuff for the PaceMan Tracker
  */
 public class PaceManTracker {
+    public static String VERSION = "Unknown"; // To be set dependent on launch method
     private static final PaceManTracker INSTANCE = new PaceManTracker();
 
     // If any end events are reached and no events have been sent for the current run, then prevent sending anything.
@@ -111,17 +112,24 @@ public class PaceManTracker {
         }
 
         if (this.eventTracker.hasHeaderChanged()) {
+            if (this.runOnPaceMan) {
+                this.sendCancel();
+            }
             this.headerToSend = this.eventTracker.getCurrentHeader();
+            PaceManTracker.logDebug("New Header: " + this.headerToSend);
             this.eventsToSend.clear();
             this.runOnPaceMan = false;
             this.setRunProgress(RunProgress.STARTING);
         }
 
         List<String> latestNewLines = this.eventTracker.getLatestNewLines();
+        if (!latestNewLines.isEmpty()) {
+            PaceManTracker.logDebug("New Lines: " + latestNewLines);
+        }
 
         if (this.getTimeSinceRunStart() > RUN_TOO_LONG_MILLIS) {
             PaceManTracker.logDebug("Run started too long ago, this run won't be sent to PaceMan.gg");
-            this.setRunProgress(RunProgress.ENDED);
+            this.endRun();
         }
 
         if (latestNewLines.isEmpty() || this.runProgress == RunProgress.ENDED) {
@@ -142,7 +150,7 @@ public class PaceManTracker {
                 } else {
                     this.eventsToSend.clear();
                 }
-                this.setRunProgress(RunProgress.ENDED);
+                this.endRun();
                 break;
             } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
                 PaceManTracker.logError("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
@@ -162,6 +170,25 @@ public class PaceManTracker {
         }
     }
 
+    private void sendCancel() {
+        PaceManTracker.logDebug("Telling Paceman to cancel the run.");
+        int tries = 0;
+        // While sending gives back an error
+        while (PacemanGGUtil.PaceManResponse.SEND_ERROR == (
+                PacemanGGUtil.sendCancelToPacemanGG(PaceManTrackerOptions.getInstance().accessKey)
+        )) {
+            if (++tries < 5) {
+                // Wait 5 seconds on failure before retry.
+                PaceManTracker.logError("Failed to tell PaceMan.gg to cancel the run, retrying in 5 seconds...");
+                SleepUtil.sleep(5000);
+            } else {
+                break;
+            }
+        }
+        // If the response was a denial (400+ response code), it is probably because there is no run to cancel, so we have succeeded anyway.
+        this.runOnPaceMan = false;
+    }
+
     private long getTimeSinceRunStart() {
         return Math.abs(System.currentTimeMillis() - this.eventTracker.getRunStartTime());
     }
@@ -172,7 +199,7 @@ public class PaceManTracker {
         int tries = 0;
         // While sending gives back an error
         while (PacemanGGUtil.PaceManResponse.SEND_ERROR == (
-                response = PacemanGGUtil.sendToPacemanGG(
+                response = PacemanGGUtil.sendEventsToPacemanGG(
                         PaceManTrackerOptions.getInstance().accessKey,
                         this.headerToSend,
                         this.eventsToSend,
@@ -190,16 +217,21 @@ public class PaceManTracker {
         if (response == PacemanGGUtil.PaceManResponse.DENIED) {
             // Deny response = cancel the run
             PaceManTracker.logError("PaceMan.gg denied run data, no more data will be sent for this run.");
-            this.setRunProgress(RunProgress.ENDED);
+            this.endRun();
         } else if (response == PacemanGGUtil.PaceManResponse.SEND_ERROR) {
             PaceManTracker.logError("Failed to send to PaceMan.gg after a couple tries, no more data will be sent for this run.");
-            this.setRunProgress(RunProgress.ENDED);
+            this.endRun();
         } else {
             PaceManTracker.logDebug("Successfully sent to PaceMan.gg");
             this.headerToSend = null;
             this.eventsToSend.clear();
             this.runOnPaceMan = true;
         }
+    }
+
+    private void endRun() {
+        this.setRunProgress(RunProgress.ENDED);
+        this.runOnPaceMan = false;
     }
 
     public void stop() {
@@ -212,7 +244,9 @@ public class PaceManTracker {
         }
 
         // Do cleanup
-        // TODO: Tell PaceMan.gg that we have stopped (?)
+        if (this.runOnPaceMan) {
+            this.sendCancel();
+        }
     }
 
     private enum RunProgress {

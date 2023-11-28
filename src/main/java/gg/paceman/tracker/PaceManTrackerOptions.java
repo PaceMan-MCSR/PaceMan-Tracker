@@ -23,7 +23,7 @@ public class PaceManTrackerOptions {
     public boolean enabledForPlugin = false;
 
     public static void save() throws IOException {
-        ensurePaceManDir();
+        PaceManTrackerOptions.ensurePaceManDir();
         FileWriter writer = new FileWriter(SAVE_PATH.toFile());
         GSON.toJson(instance, writer);
         writer.close();
