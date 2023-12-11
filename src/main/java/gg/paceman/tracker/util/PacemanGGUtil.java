@@ -5,14 +5,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import gg.paceman.tracker.PaceManTracker;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PacemanGGUtil {
     private static final String PACEMANGG_ENDPOINT = "https://paceman.gg/api/sendevent";
@@ -62,15 +62,16 @@ public class PacemanGGUtil {
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
         PaceManTracker.logDebug("Sending exactly: " + toSend);
-        int response;
+        int responseCode;
         try {
-            response = PacemanGGUtil.sendData(PACEMANGG_ENDPOINT, toSend);
-            PaceManTracker.logDebug("Response Code " + response);
+            PostResponse out = PacemanGGUtil.sendData(PACEMANGG_ENDPOINT, toSend);
+            responseCode = out.code;
+            PaceManTracker.logDebug("Response " + responseCode + ": " + out.message);
         } catch (IOException e) {
             return PaceManResponse.SEND_ERROR;
         }
 
-        if (response == SUCCESS_RESPONSE_CODE) {
+        if (responseCode == SUCCESS_RESPONSE_CODE) {
             return PaceManResponse.SUCCESS;
         } else {
             return PaceManResponse.DENIED;
@@ -96,7 +97,7 @@ public class PacemanGGUtil {
     }
 
 
-    private static int sendData(String endpointUrl, String jsonData) throws IOException {
+    private static PostResponse sendData(String endpointUrl, String jsonData) throws IOException {
         // Create URL object
         URL url = new URL(endpointUrl);
         HttpURLConnection connection = null;
@@ -114,9 +115,12 @@ public class PacemanGGUtil {
                 byte[] input = jsonData.getBytes(StandardCharsets.UTF_8);
                 os.write(input, 0, input.length);
             }
+            int responseCode = connection.getResponseCode();
+            String message = responseCode >= 400 ? PacemanGGUtil.readStream(connection.getErrorStream()) : connection.getResponseMessage();
+
 
             // Return the response code
-            return connection.getResponseCode();
+            return new PostResponse(responseCode, message);
         } finally {
             // Close the connection
             if (connection != null) {
@@ -125,9 +129,23 @@ public class PacemanGGUtil {
         }
     }
 
+    private static String readStream(InputStream inputStream) {
+        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
+    }
+
     public enum PaceManResponse {
         SUCCESS, // 201 response
         DENIED, // non 201 response
         SEND_ERROR // error while trying to send
+    }
+
+    private static class PostResponse {
+        private final int code;
+        private final String message;
+
+        private PostResponse(int code, String message) {
+            this.code = code;
+            this.message = message;
+        }
     }
 }
