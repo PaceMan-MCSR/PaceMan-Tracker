@@ -22,7 +22,7 @@ public class PaceManTrackerGUI extends JFrame {
     private JPanel mainPanel;
     private JButton saveButton;
     private boolean closed = false;
-    private boolean asPlugin = false;
+    private final boolean asPlugin;
 
     public PaceManTrackerGUI(boolean asPlugin) {
         this.setTitle("PaceMan Tracker");
@@ -39,9 +39,13 @@ public class PaceManTrackerGUI extends JFrame {
         if (!asPlugin) {
             this.mainPanel.remove(this.enabledCheckBox);
         }
-        this.enabledCheckBox.setSelected(PaceManTrackerOptions.getInstance().enabledForPlugin);
-        this.enabledCheckBox.addActionListener(e -> this.saveButton.setEnabled(this.hasChanges()));
-        this.accessKeyField.setText(PaceManTrackerOptions.getInstance().accessKey);
+        PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+        this.enabledCheckBox.setSelected(options.enabledForPlugin);
+        this.enabledCheckBox.addActionListener(e -> {
+            this.saveButton.setEnabled(this.hasChanges());
+            this.accessKeyField.setEnabled(this.checkBoxEnabled());
+        });
+        this.accessKeyField.setText(options.accessKey);
         this.accessKeyField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
@@ -52,6 +56,7 @@ public class PaceManTrackerGUI extends JFrame {
             }
 
         });
+        this.accessKeyField.setEnabled(options.enabledForPlugin);
         this.saveButton.addActionListener(e -> this.save());
         this.saveButton.setEnabled(this.hasChanges());
         this.revalidate();
