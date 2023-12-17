@@ -43,7 +43,9 @@ public class PaceManTrackerGUI extends JFrame {
         this.enabledCheckBox.setSelected(options.enabledForPlugin);
         this.enabledCheckBox.addActionListener(e -> {
             this.saveButton.setEnabled(this.hasChanges());
-            this.accessKeyField.setEnabled(this.checkBoxEnabled());
+            if (asPlugin) {
+                this.accessKeyField.setEnabled(this.checkBoxEnabled());
+            }
         });
         this.accessKeyField.setText(options.accessKey);
         this.accessKeyField.addKeyListener(new KeyAdapter() {
@@ -56,7 +58,9 @@ public class PaceManTrackerGUI extends JFrame {
             }
 
         });
-        this.accessKeyField.setEnabled(options.enabledForPlugin);
+        if (asPlugin) {
+            this.accessKeyField.setEnabled(options.enabledForPlugin);
+        }
         this.saveButton.addActionListener(e -> this.save());
         this.saveButton.setEnabled(this.hasChanges());
         this.revalidate();
