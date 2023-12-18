@@ -64,7 +64,8 @@ public class PaceManTrackerGUI extends JFrame {
         this.saveButton.addActionListener(e -> this.save());
         this.saveButton.setEnabled(this.hasChanges());
         this.revalidate();
-        this.setSize(300, asPlugin ? 140 : 120);
+        this.setMinimumSize(new Dimension(300, asPlugin ? 140 : 120));
+        this.pack();
         this.setResizable(false);
         this.setVisible(true);
     }
