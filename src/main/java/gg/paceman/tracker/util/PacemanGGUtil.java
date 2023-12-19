@@ -57,11 +57,11 @@ public class PacemanGGUtil {
         eventModelInput.addProperty("timeSinceRunStart", timeSinceRunStart);
 
         String toSend = eventModelInput.toString();
+        PaceManTracker.logDebug("Sending exactly: " + toSend.replace(accessKey,"KEY_HIDDEN"));
         return PacemanGGUtil.sendToPacemanGG(toSend);
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
-        PaceManTracker.logDebug("Sending exactly: " + toSend);
         int responseCode;
         try {
             PostResponse out = PacemanGGUtil.sendData(PACEMANGG_ENDPOINT, toSend);
