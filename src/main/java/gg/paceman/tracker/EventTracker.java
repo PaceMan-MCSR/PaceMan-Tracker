@@ -2,6 +2,7 @@ package gg.paceman.tracker;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import gg.paceman.tracker.util.SleepUtil;
 
 import java.io.IOException;
@@ -26,6 +27,8 @@ public class EventTracker {
     private String currentHeader = "";
     private boolean headerChanged = false;
     private List<String> latestNewLines = Collections.emptyList();
+
+    private int failuresInARow = 0;
 
     public EventTracker(Path globalFile) {
         this.globalFile = globalFile;
@@ -124,16 +127,19 @@ public class EventTracker {
         return true;
     }
 
-    private void tryLoadNewHeader(String newHeader) throws IOException {
+    private void tryLoadNewHeader(String newHeader) {
         JsonObject json;
         try {
             json = new Gson().fromJson(newHeader, JsonObject.class);
-        } catch (Exception e) {
-            PaceManTracker.logError("Error converting global file to json: " + e);
-            this.eventLogPath = null;
+        } catch (JsonSyntaxException e) {
+            if(++this.failuresInARow > 2){
+                PaceManTracker.logError("Error converting global file to json: " + e);
+                this.eventLogPath = null;
+            }
             return;
         }
 
+        this.failuresInARow = 0;
         this.currentHeader = newHeader;
         this.headerChanged = true;
         this.eventLogPath = Paths.get(json.get("world_path").getAsString()).resolve("speedrunigt").resolve("events.log");
