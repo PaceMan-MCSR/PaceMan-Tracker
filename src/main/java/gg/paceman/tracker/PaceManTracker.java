@@ -151,6 +151,7 @@ public class PaceManTracker {
                     this.eventsToSend.clear();
                 }
                 this.endRun();
+                shouldDump = false;
                 break;
             } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
                 PaceManTracker.logError("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
