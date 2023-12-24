@@ -132,7 +132,7 @@ public class EventTracker {
         try {
             json = new Gson().fromJson(newHeader, JsonObject.class);
         } catch (JsonSyntaxException e) {
-            if(++this.failuresInARow > 2){
+            if (++this.failuresInARow > 2) {
                 PaceManTracker.logError("Error converting global file to json: " + e);
                 this.eventLogPath = null;
             }
