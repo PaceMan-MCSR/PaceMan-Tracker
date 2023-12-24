@@ -3,6 +3,7 @@ package gg.paceman.tracker;
 import gg.paceman.tracker.util.ExceptionUtil;
 import gg.paceman.tracker.util.PacemanGGUtil;
 import gg.paceman.tracker.util.SleepUtil;
+import gg.paceman.tracker.util.VersionUtil;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -125,6 +126,11 @@ public class PaceManTracker {
             this.eventsToSend.clear();
             this.runOnPaceMan = false;
             this.setRunProgress(RunProgress.STARTING);
+
+            // If 14.1 is a newer version than the current one
+            if (VersionUtil.tryCompare("14.1", this.eventTracker.getSRIGTVersion(), 0) > 1) {
+                PaceManTracker.logWarning("Your SpeedRunIGT version is " + this.eventTracker.getSRIGTVersion() + "! This means some tracking features will be missing, consider updating SpeedRunIGT to the latest version.");
+            }
         }
 
         List<String> latestNewLines = this.eventTracker.getLatestNewLines();
