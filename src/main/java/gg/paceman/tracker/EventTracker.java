@@ -25,6 +25,8 @@ public class EventTracker {
     private long readProgress = 0;
     private long runStartTime = -1;
     private String currentHeader = "";
+    private String srIGTVersion = "";
+    private String gameVersion = "";
     private boolean headerChanged = false;
     private List<String> latestNewLines = Collections.emptyList();
 
@@ -32,6 +34,14 @@ public class EventTracker {
 
     public EventTracker(Path globalFile) {
         this.globalFile = globalFile;
+    }
+
+    public String getSRIGTVersion() {
+        return this.srIGTVersion;
+    }
+
+    public String getGameVersion() {
+        return this.gameVersion;
     }
 
     public long getRunStartTime() {
@@ -139,6 +149,8 @@ public class EventTracker {
             return;
         }
 
+        this.srIGTVersion = json.has("mod_version") ? (json.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
+        this.gameVersion = json.get("version").getAsString();
         this.failuresInARow = 0;
         this.currentHeader = newHeader;
         this.headerChanged = true;
