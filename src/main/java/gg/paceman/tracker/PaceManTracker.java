@@ -36,6 +36,7 @@ public class PaceManTracker {
     public static Consumer<String> logConsumer = System.out::println;
     public static Consumer<String> debugConsumer = System.out::println;
     public static Consumer<String> errorConsumer = System.out::println;
+    public static Consumer<String> warningConsumer = System.out::println;
 
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -60,6 +61,10 @@ public class PaceManTracker {
 
     public static void logError(String error) {
         errorConsumer.accept(error);
+    }
+
+    public static void logWarning(String error) {
+        warningConsumer.accept(error);
     }
 
     private boolean shouldRun() {

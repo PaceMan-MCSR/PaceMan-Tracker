@@ -45,6 +45,7 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
         PaceManTracker.logConsumer = m -> Julti.log(Level.INFO, "(PaceMan Tracker) " + m);
         PaceManTracker.debugConsumer = m -> Julti.log(Level.DEBUG, "(PaceMan Tracker) " + m);
         PaceManTracker.errorConsumer = m -> Julti.log(Level.ERROR, "(PaceMan Tracker) " + m);
+        PaceManTracker.warningConsumer = m -> Julti.log(Level.WARN, "(PaceMan Tracker) " + m);
         Optional<PluginManager.LoadedJultiPlugin> pluginData = PluginManager.getPluginManager().getLoadedPlugins().stream().filter(loadedJultiPlugin -> loadedJultiPlugin.pluginData.id.equals("paceman-tracker")).findAny();
         if (pluginData.isPresent()) {
             String version = pluginData.get().pluginData.version;
