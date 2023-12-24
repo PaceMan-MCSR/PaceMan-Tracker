@@ -154,7 +154,7 @@ public class PaceManTracker {
                 shouldDump = false;
                 break;
             } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
-                PaceManTracker.logError("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
+                PaceManTracker.log("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
                 this.setRunProgress(RunProgress.PACING);
             }
             // Determine if an event is recent enough to dump
