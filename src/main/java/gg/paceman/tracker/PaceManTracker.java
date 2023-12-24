@@ -128,7 +128,7 @@ public class PaceManTracker {
             this.setRunProgress(RunProgress.STARTING);
 
             // If 14.1 is a newer version than the current one
-            if (VersionUtil.tryCompare("14.1", this.eventTracker.getSRIGTVersion(), 0) > 1) {
+            if (VersionUtil.tryCompare("14.1", this.eventTracker.getSRIGTVersion(), 0) > 0) {
                 PaceManTracker.logWarning("Your SpeedRunIGT version is " + this.eventTracker.getSRIGTVersion() + "! This means some tracking features will be missing, consider updating SpeedRunIGT to the latest version.");
             }
         }
