@@ -38,11 +38,13 @@ public class PacemanGGUtil {
             String worldId = PacemanGGUtil.sha256Hash(latestWorldJson.get("world_path").getAsString());
             JsonArray mods = latestWorldJson.getAsJsonArray("mods");
             String gameVersion = latestWorldJson.get("version").getAsString();
+            String srIGTVersion = latestWorldJson.has("mod_version") ? (latestWorldJson.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
             String category = latestWorldJson.get("category").getAsString();
 
             JsonObject gameData = new JsonObject();
             gameData.addProperty("worldId", worldId);
             gameData.addProperty("gameVersion", gameVersion);
+            gameData.addProperty("modVersion", srIGTVersion);
             gameData.addProperty("category", category);
             gameData.add("modList", mods);
             gameData.addProperty("trackerVersion", PaceManTracker.VERSION);
