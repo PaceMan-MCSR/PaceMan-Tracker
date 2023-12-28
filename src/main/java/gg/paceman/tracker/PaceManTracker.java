@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * The actual logic and stuff for the PaceMan Tracker
@@ -30,6 +31,8 @@ public class PaceManTracker {
     private static final List<String> START_EVENTS = Collections.singletonList("rsg.enter_nether");
     // Unimportant events are not considered when determining if an event is recent enough to send the run to PaceMan
     private static final List<String> UNIMPORTANT_EVENTS = Arrays.asList("common.leave_world", "common.rejoin_world");
+
+    private static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
 
     private static final long RUN_TOO_LONG_MILLIS = 3_600_000; // 1 hour
     private static final long EVENT_RECENT_ENOUGH_MILLIS = 60_000; // 1 minute
@@ -126,6 +129,10 @@ public class PaceManTracker {
             this.eventsToSend.clear();
             this.runOnPaceMan = false;
             this.setRunProgress(RunProgress.STARTING);
+
+            if (!RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches()) {
+                this.setRunProgress(RunProgress.ENDED);
+            }
 
             // If 14.1 is a newer version than the current one
             if (VersionUtil.tryCompare("14.1", this.eventTracker.getSRIGTVersion(), 0) > 0) {

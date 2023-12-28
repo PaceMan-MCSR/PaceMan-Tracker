@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class EventTracker {
     private final Path globalFile;
     private Path eventLogPath = null;
+    private Path worldPath = null;
 
     private long lastMod = -1;
     private long readProgress = 0;
@@ -34,6 +35,10 @@ public class EventTracker {
 
     public EventTracker(Path globalFile) {
         this.globalFile = globalFile;
+    }
+
+    public String getCurrentWorldName() {
+        return this.worldPath == null ? null : this.worldPath.getFileName().toString();
     }
 
     public String getSRIGTVersion() {
@@ -145,6 +150,7 @@ public class EventTracker {
             if (++this.failuresInARow > 2) {
                 PaceManTracker.logError("Error converting global file to json: " + e);
                 this.eventLogPath = null;
+                this.worldPath = null;
             }
             return;
         }
@@ -154,7 +160,8 @@ public class EventTracker {
         this.failuresInARow = 0;
         this.currentHeader = newHeader;
         this.headerChanged = true;
-        this.eventLogPath = Paths.get(json.get("world_path").getAsString()).resolve("speedrunigt").resolve("events.log");
+        this.worldPath = Paths.get(json.get("world_path").getAsString());
+        this.eventLogPath = this.worldPath.resolve("speedrunigt").resolve("events.log");
         this.readProgress = 0;
         this.runStartTime = -1;
     }
