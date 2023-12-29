@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PacemanGGUtil {
-    private static final String PACEMANGG_ENDPOINT = "https://paceman.gg/api/sendevent";
+    private static final String PACEMANGG_EVENT_ENDPOINT = "https://paceman.gg/api/sendevent";
+    private static final String PACEMANGG_TEST_ENDPOINT = "https://paceman.gg/api/test";
     private static final int SUCCESS_RESPONSE_CODE = 201;
 
     public static PaceManResponse sendCancelToPacemanGG(String accessKey) {
@@ -66,7 +67,7 @@ public class PacemanGGUtil {
     private static PaceManResponse sendToPacemanGG(String toSend) {
         int responseCode;
         try {
-            PostResponse out = PacemanGGUtil.sendData(PACEMANGG_ENDPOINT, toSend);
+            PostResponse out = PacemanGGUtil.sendData(PacemanGGUtil.PACEMANGG_EVENT_ENDPOINT, toSend);
             responseCode = out.code;
             PaceManTracker.logDebug("Response " + responseCode + ": " + out.message);
         } catch (IOException e) {
@@ -131,6 +132,16 @@ public class PacemanGGUtil {
         }
     }
 
+    public static PostResponse testAccessKey(String accessKey) {
+        JsonObject testModelInput = new JsonObject();
+        testModelInput.addProperty("accessKey", accessKey);
+        try {
+            return PacemanGGUtil.sendData(PACEMANGG_TEST_ENDPOINT, testModelInput.toString());
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     private static String readStream(InputStream inputStream) {
         return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
     }
@@ -141,13 +152,21 @@ public class PacemanGGUtil {
         SEND_ERROR // error while trying to send
     }
 
-    private static class PostResponse {
+    public static class PostResponse {
         private final int code;
         private final String message;
 
         private PostResponse(int code, String message) {
             this.code = code;
             this.message = message;
+        }
+
+        public int getCode() {
+            return this.code;
+        }
+
+        public String getMessage() {
+            return this.message;
         }
     }
 }

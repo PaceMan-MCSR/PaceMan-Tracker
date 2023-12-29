@@ -7,10 +7,8 @@ import gg.paceman.tracker.util.VersionUtil;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +34,8 @@ public class PaceManTracker {
 
     private static final long RUN_TOO_LONG_MILLIS = 3_600_000; // 1 hour
     private static final long EVENT_RECENT_ENOUGH_MILLIS = 60_000; // 1 minute
+
+    public static final Queue<Runnable> MAIN_THREAD_TODO = new ConcurrentLinkedQueue<>();
 
     public static Consumer<String> logConsumer = System.out::println;
     public static Consumer<String> debugConsumer = System.out::println;
@@ -107,6 +107,10 @@ public class PaceManTracker {
     }
 
     private void tick() {
+        while (!MAIN_THREAD_TODO.isEmpty()) {
+            MAIN_THREAD_TODO.remove().run();
+        }
+
         if (!this.shouldRun()) {
             return;
         }
