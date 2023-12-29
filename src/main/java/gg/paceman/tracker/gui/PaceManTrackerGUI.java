@@ -135,7 +135,7 @@ public class PaceManTrackerGUI extends JFrame {
     private void save() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
         options.enabledForPlugin = this.checkBoxEnabled();
-        options.accessKey = this.getKeyBoxText();
+        options.accessKey = this.getKeyBoxText().trim();
         try {
             PaceManTrackerOptions.save();
         } catch (IOException ex) {
