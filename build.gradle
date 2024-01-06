@@ -13,6 +13,7 @@ repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
     maven { url "https://www.jetbrains.com/intellij-repository/releases" }
+    maven { url "https://maven.fabricmc.net/" }
 }
 
 configurations {
@@ -24,6 +25,9 @@ configurations {
 dependencies {
     // Choose Julti version: https://jitpack.io/#DuncanRuns/Julti/
     implementation 'com.github.DuncanRuns:Julti:v1.0.1'
+
+    // Implemented so that PaceManTrackerFabricFailModInit can exist
+    implementation 'net.fabricmc:fabric-loader:0.15.0'
 
     provided 'com.jetbrains.intellij.java:java-gui-forms-rt:203.7148.30'
     provided 'com.google.code.gson:gson:2.10'
