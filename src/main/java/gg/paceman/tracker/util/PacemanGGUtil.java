@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class PacemanGGUtil {
     private static final String PACEMANGG_EVENT_ENDPOINT = "https://paceman.gg/api/sendevent";
     private static final String PACEMANGG_TEST_ENDPOINT = "https://paceman.gg/api/test";
-    private static final int SUCCESS_RESPONSE_CODE = 201;
+    private static final int MIN_DENY_CODE = 400;
 
     public static PaceManResponse sendCancelToPacemanGG(String accessKey) {
         JsonObject eventModelInput = new JsonObject();
@@ -74,7 +74,7 @@ public class PacemanGGUtil {
             return PaceManResponse.SEND_ERROR;
         }
 
-        if (responseCode == SUCCESS_RESPONSE_CODE) {
+        if (responseCode < MIN_DENY_CODE) {
             return PaceManResponse.SUCCESS;
         } else {
             return PaceManResponse.DENIED;
