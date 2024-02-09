@@ -10,6 +10,7 @@ import gg.paceman.tracker.util.UpdateUtil;
 import javax.swing.*;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Launches PaceMan as a standalone program.
@@ -23,7 +24,7 @@ public class PaceManTrackerJarLaunch {
             gui = PaceManTrackerGUI.open(false, null);
             gui.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         }
-        PaceManTracker.VERSION = PaceManTrackerJarLaunch.class.getPackage().getImplementationVersion() == null ? "DEV" : PaceManTrackerJarLaunch.class.getPackage().getImplementationVersion();
+        PaceManTracker.VERSION = Optional.ofNullable(PaceManTrackerJarLaunch.class.getPackage().getImplementationVersion()).orElse("DEV");
         PaceManTracker.log("Running PaceMan Tracker v" + PaceManTracker.VERSION);
         PaceManTracker.getInstance().start(false);
         try {
