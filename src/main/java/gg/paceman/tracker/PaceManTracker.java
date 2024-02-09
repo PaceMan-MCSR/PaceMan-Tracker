@@ -137,6 +137,7 @@ public class PaceManTracker {
             this.setRunProgress(RunProgress.STARTING);
 
             if (!options.allowAnyWorldName && !RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches()) {
+                PaceManTracker.logWarning("World name is not \"Random Speedrun #...\" so this run will not be on PaceMan.gg (this prevents practice maps and tourney worlds). If you want to play manually created worlds (New World) or you are Couriway then you can edit the allowAnyWorldName option in "+PaceManTrackerOptions.SAVE_PATH);
                 this.setRunProgress(RunProgress.ENDED);
             }
 

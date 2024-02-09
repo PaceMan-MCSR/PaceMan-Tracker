@@ -14,10 +14,9 @@ import java.nio.file.Paths;
  * Handles the save options for the tracker
  */
 public class PaceManTrackerOptions {
+    public static final Path SAVE_PATH = Paths.get(System.getProperty("user.home")).resolve(".PaceMan").resolve("options.json").toAbsolutePath();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path SAVE_PATH = Paths.get(System.getProperty("user.home")).resolve(".PaceMan").resolve("options.json").toAbsolutePath();
     private static PaceManTrackerOptions instance;
-
 
     public String accessKey = "";
     public boolean enabledForPlugin = false;
