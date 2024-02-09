@@ -107,6 +107,8 @@ public class PaceManTracker {
     }
 
     private void tick() {
+        PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+
         while (!MAIN_THREAD_TODO.isEmpty()) {
             MAIN_THREAD_TODO.remove().run();
         }
@@ -134,7 +136,7 @@ public class PaceManTracker {
             this.runOnPaceMan = false;
             this.setRunProgress(RunProgress.STARTING);
 
-            if (!RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches()) {
+            if (!options.allowAnyWorldName && !RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches()) {
                 this.setRunProgress(RunProgress.ENDED);
             }
 

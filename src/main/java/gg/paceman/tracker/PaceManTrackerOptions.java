@@ -21,6 +21,7 @@ public class PaceManTrackerOptions {
 
     public String accessKey = "";
     public boolean enabledForPlugin = false;
+    public boolean allowAnyWorldName = false;
 
     public static void save() throws IOException {
         PaceManTrackerOptions.ensurePaceManDir();
