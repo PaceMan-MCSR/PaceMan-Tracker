@@ -38,7 +38,7 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
     @Override
     public void initialize() {
         try {
-            PaceManTrackerOptions.load();
+            PaceManTrackerOptions.load().save();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

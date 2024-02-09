@@ -17,7 +17,7 @@ import java.util.Arrays;
 public class PaceManTrackerJarLaunch {
     public static void main(String[] args) throws IOException {
         FlatDarkLaf.setup();
-        PaceManTrackerOptions.load();
+        PaceManTrackerOptions.load().save();
         PaceManTrackerGUI gui = null;
         if (!Arrays.asList(args).contains("--nogui")) {
             gui = PaceManTrackerGUI.open(false, null);

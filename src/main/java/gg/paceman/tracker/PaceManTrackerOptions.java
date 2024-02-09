@@ -23,13 +23,6 @@ public class PaceManTrackerOptions {
     public boolean enabledForPlugin = false;
     public boolean allowAnyWorldName = false;
 
-    public static void save() throws IOException {
-        PaceManTrackerOptions.ensurePaceManDir();
-        FileWriter writer = new FileWriter(SAVE_PATH.toFile());
-        GSON.toJson(instance, writer);
-        writer.close();
-    }
-
     /**
      * Load and return the options file
      */
@@ -48,5 +41,12 @@ public class PaceManTrackerOptions {
 
     public static void ensurePaceManDir() {
         new File((System.getProperty("user.home") + "/.PaceMan/").replace("\\", "/").replace("//", "/")).mkdirs();
+    }
+
+    public void save() throws IOException {
+        PaceManTrackerOptions.ensurePaceManDir();
+        FileWriter writer = new FileWriter(SAVE_PATH.toFile());
+        GSON.toJson(this, writer);
+        writer.close();
     }
 }
