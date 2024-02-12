@@ -7,6 +7,7 @@ import gg.paceman.tracker.util.VersionUtil;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -50,6 +51,8 @@ public class PaceManTracker {
     private boolean runOnPaceMan = false;
     private RunProgress runProgress = RunProgress.NONE;
     private final List<String> eventsToSend = new ArrayList<>();
+
+    private long nextDebugPrint = -1;
 
     public static PaceManTracker getInstance() {
         return INSTANCE;
@@ -107,6 +110,7 @@ public class PaceManTracker {
     }
 
     private void tick() {
+        this.showRunningDebug();
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
 
         while (!MAIN_THREAD_TODO.isEmpty()) {
@@ -137,7 +141,7 @@ public class PaceManTracker {
             this.setRunProgress(RunProgress.STARTING);
 
             if (!options.allowAnyWorldName && !RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches()) {
-                PaceManTracker.logWarning("World name is not \"Random Speedrun #...\" so this run will not be on PaceMan.gg (this prevents practice maps and tourney worlds). If you want to play manually created worlds (New World) or you are Couriway then you can edit the allowAnyWorldName option in "+PaceManTrackerOptions.SAVE_PATH);
+                PaceManTracker.logWarning("World name is not \"Random Speedrun #...\" so this run will not be on PaceMan.gg (this prevents practice maps and tourney worlds). If you want to play manually created worlds (New World) or you are Couriway then you can edit the allowAnyWorldName option in " + PaceManTrackerOptions.SAVE_PATH);
                 this.setRunProgress(RunProgress.ENDED);
             }
 
@@ -179,21 +183,33 @@ public class PaceManTracker {
                 shouldDump = false;
                 break;
             } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
-                PaceManTracker.log("PaceMan Tracker start event reached, sending to PaceMan.gg should be enabled if an event is recent enough.");
+                PaceManTracker.logDebug("PaceMan Tracker start event reached!");
                 this.setRunProgress(RunProgress.PACING);
             }
-            // Determine if an event is recent enough to dump
+            // Determine if the event is recent enough to dump
             if (!shouldDump && this.runProgress == RunProgress.PACING && !UNIMPORTANT_EVENTS.contains(eventName)) {
                 long timeDiff = Math.abs(System.currentTimeMillis() - (Long.parseLong(parts[1]) + this.eventTracker.getRunStartTime()));
-                PaceManTracker.logDebug(String.format("Event %s happened %d milliseconds ago.", eventName, timeDiff));
                 if (timeDiff < EVENT_RECENT_ENOUGH_MILLIS) {
                     shouldDump = true;
+                    PaceManTracker.log("Run will now be sent to PaceMan.gg!");
+                } else {
+                    PaceManTracker.logDebug(String.format("Event %s happened %d milliseconds ago (not recent enough).", eventName, timeDiff));
                 }
             }
         }
         if (shouldDump) {
             this.dumpToPacemanGG();
         }
+    }
+
+    private void showRunningDebug() {
+        if (System.currentTimeMillis() < this.nextDebugPrint) return;
+        if (this.nextDebugPrint == -1) {
+            this.nextDebugPrint = System.currentTimeMillis() + 60_000;
+        } else {
+            this.nextDebugPrint += 60_000;
+        }
+        PaceManTracker.logDebug("PaceMan Tracker is running! (" + Instant.now() + ")");
     }
 
     private void sendCancel() {
