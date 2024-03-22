@@ -31,8 +31,8 @@ public class PaceManTracker {
     // Unimportant events are not considered when determining if an event is recent enough to send the run to PaceMan
     private static final List<String> UNIMPORTANT_EVENTS = Arrays.asList("common.leave_world", "common.rejoin_world");
 
-    private static final Set<String> IMPORTANT_ITEM_COUNTS = new HashSet<>(Arrays.asList("minecraft:ender_pearl","minecraft:obsidian","minecraft:blaze_rod"));
-    private static final Set<String> IMPORTANT_ITEM_USAGES = new HashSet<>(Arrays.asList("minecraft:ender_pearl","minecraft:obsidian"));
+    private static final Set<String> IMPORTANT_ITEM_COUNTS = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian", "minecraft:blaze_rod"));
+    private static final Set<String> IMPORTANT_ITEM_USAGES = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian"));
 
     private static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
 
