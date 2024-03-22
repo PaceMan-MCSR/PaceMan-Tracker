@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PacemanGGUtil {
@@ -30,7 +31,7 @@ public class PacemanGGUtil {
         return PacemanGGUtil.sendToPacemanGG(eventModelInput.toString());
     }
 
-    public static PaceManResponse sendEventsToPacemanGG(String accessKey, String latestWorldContents, List<String> events, long timeSinceRunStart) {
+    public static PaceManResponse sendEventsToPacemanGG(String accessKey, String latestWorldContents, List<String> events, long timeSinceRunStart, Optional<JsonObject> itemDataOpt) {
         JsonObject eventModelInput = new JsonObject();
         eventModelInput.addProperty("accessKey", accessKey);
 
@@ -58,6 +59,11 @@ public class PacemanGGUtil {
         eventModelInput.add("eventList", eventList);
 
         eventModelInput.addProperty("timeSinceRunStart", timeSinceRunStart);
+        itemDataOpt.ifPresent(itemData -> {
+            if (!itemData.keySet().isEmpty()) {
+                eventModelInput.add("itemData", itemData);
+            }
+        });
 
         String toSend = eventModelInput.toString();
         PaceManTracker.logDebug("Sending exactly: " + toSend.replace(accessKey, "KEY_HIDDEN"));
