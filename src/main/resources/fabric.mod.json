@@ -8,7 +8,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"gg.paceman.tracker.fabricfail.PaceManTrackerFabricFailModInit"
+			"gg.paceman.tracker.fabricfail.PaceManTrackerFabricFailModInit::onInitialize"
 		]
 	}
 }

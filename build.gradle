@@ -26,9 +26,6 @@ dependencies {
     // Choose Julti version: https://jitpack.io/#DuncanRuns/Julti/
     implementation 'com.github.DuncanRuns:Julti:v1.1.0'
 
-    // Implemented so that PaceManTrackerFabricFailModInit can exist
-    implementation 'net.fabricmc:fabric-loader:0.15.0'
-
     provided 'com.jetbrains.intellij.java:java-gui-forms-rt:203.7148.30'
     provided 'com.google.code.gson:gson:2.10'
     provided 'com.formdev:flatlaf:3.0'
