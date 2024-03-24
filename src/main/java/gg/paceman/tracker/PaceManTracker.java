@@ -31,6 +31,9 @@ public class PaceManTracker {
     // Unimportant events are not considered when determining if an event is recent enough to send the run to PaceMan
     private static final List<String> UNIMPORTANT_EVENTS = Arrays.asList("common.leave_world", "common.rejoin_world");
 
+    private static final Set<String> IMPORTANT_ITEM_COUNTS = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian", "minecraft:blaze_rod"));
+    private static final Set<String> IMPORTANT_ITEM_USAGES = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian"));
+
     private static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
 
     private static final long RUN_TOO_LONG_MILLIS = 3_600_000; // 1 hour
@@ -44,6 +47,7 @@ public class PaceManTracker {
     public static Consumer<String> warningConsumer = System.out::println;
 
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
+    private final ItemTracker itemTracker = new ItemTracker();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
 
@@ -151,6 +155,8 @@ public class PaceManTracker {
             }
         }
 
+        this.itemTracker.tryUpdate(this.eventTracker.getWorldPath());
+
         List<String> latestNewLines = this.eventTracker.getLatestNewLines();
         if (!latestNewLines.isEmpty()) {
             PaceManTracker.logDebug("New Lines: " + latestNewLines);
@@ -245,7 +251,8 @@ public class PaceManTracker {
                         PaceManTrackerOptions.getInstance().accessKey,
                         this.headerToSend,
                         this.eventsToSend,
-                        this.getTimeSinceRunStart()
+                        this.getTimeSinceRunStart(),
+                        this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS, IMPORTANT_ITEM_USAGES)
                 )
         )) {
             if (++tries < 5) {

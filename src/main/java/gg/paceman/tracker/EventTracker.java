@@ -165,4 +165,8 @@ public class EventTracker {
         this.readProgress = 0;
         this.runStartTime = -1;
     }
+
+    public Path getWorldPath() {
+        return this.worldPath;
+    }
 }
