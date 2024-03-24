@@ -6,6 +6,8 @@ import gg.paceman.tracker.util.SleepUtil;
 import gg.paceman.tracker.util.VersionUtil;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
@@ -78,6 +80,28 @@ public class PaceManTracker {
         warningConsumer.accept(error);
     }
 
+    private static boolean areAtumSettingsAreGood(Path worldPath) throws IOException {
+        // .minecraft/saves/x -> .minecraft/saves -> .minecraft -> .minecraft/config -> .minecraft/config/atum -> .minecraft/config/atum/atum.properties
+        Path atumPropPath = worldPath.getParent().getParent().resolve("config").resolve("atum").resolve("atum.properties");
+        if (!Files.exists(atumPropPath)) {
+            return false;
+        }
+        String atumPropText = new String(Files.readAllBytes(atumPropPath));
+        for (String line : atumPropText.split("\n")) {
+            String[] args = line.trim().split("=");
+            if (args.length < 2) {
+                continue;
+            }
+            if (args[0].trim().equals("generatorType") && !args[1].trim().equals("0")) {
+                return false;
+            }
+            if (args[0].trim().equals("bonusChest") && args[1].trim().equals("true")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean shouldRun() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
         if (options.accessKey.isEmpty()) {
@@ -144,10 +168,17 @@ public class PaceManTracker {
             this.runOnPaceMan = false;
             this.setRunProgress(RunProgress.STARTING);
 
-            if (!options.allowAnyWorldName && !RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches()) {
+            boolean isRandomSpeedrunWorld = RANDOM_WORLD_PATTERN.matcher(this.eventTracker.getCurrentWorldName()).matches();
+            if (!options.allowAnyWorldName && !isRandomSpeedrunWorld) {
                 PaceManTracker.logWarning("World name is not \"Random Speedrun #...\" so this run will not be on PaceMan.gg (this prevents practice maps and tourney worlds). If you want to play manually created worlds (New World) or you are Couriway then you can edit the allowAnyWorldName option in " + PaceManTrackerOptions.SAVE_PATH);
                 this.setRunProgress(RunProgress.ENDED);
             }
+
+            try {
+                if (isRandomSpeedrunWorld && !PaceManTracker.areAtumSettingsAreGood(this.eventTracker.getWorldPath())) {
+                    PaceManTracker.logWarning("Your atum settings have issues! Please ensure your atum is set to default generation type with bonus chests off!");
+                    this.setRunProgress(RunProgress.ENDED);
+                }
 
             // If 14.1 is a newer version than the current one
             if (VersionUtil.tryCompare("14.1", this.eventTracker.getSRIGTVersion(), 0) > 0) {
