@@ -179,6 +179,9 @@ public class PaceManTracker {
                     PaceManTracker.logWarning("Your atum settings have issues! Please ensure your atum is set to default generation type with bonus chests off!");
                     this.setRunProgress(RunProgress.ENDED);
                 }
+            } catch (IOException ignored) {
+                // Damn that sucks! But it really shouldn't happen because we check if the file exists before reading.
+            }
 
             // If 14.1 is a newer version than the current one
             if (VersionUtil.tryCompare("14.1", this.eventTracker.getSRIGTVersion(), 0) > 0) {
