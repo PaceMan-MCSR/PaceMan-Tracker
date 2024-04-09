@@ -318,11 +318,11 @@ public class PaceManTracker {
     }
 
     public void stop() {
-        // Wait for and shutdown executor
-        this.executor.shutdownNow();
         try {
+            // Wait for and shutdown executor
+            this.executor.shutdownNow();
             this.executor.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 

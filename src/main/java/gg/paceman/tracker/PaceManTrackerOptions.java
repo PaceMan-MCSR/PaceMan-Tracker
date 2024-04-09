@@ -42,6 +42,10 @@ public class PaceManTrackerOptions {
         new File((System.getProperty("user.home") + "/.PaceMan/").replace("\\", "/").replace("//", "/")).mkdirs();
     }
 
+    public static Path getPaceManDir() {
+        return Paths.get(System.getProperty("user.home")).resolve(".PaceMan").toAbsolutePath();
+    }
+
     public void save() throws IOException {
         PaceManTrackerOptions.ensurePaceManDir();
         FileWriter writer = new FileWriter(SAVE_PATH.toFile());
