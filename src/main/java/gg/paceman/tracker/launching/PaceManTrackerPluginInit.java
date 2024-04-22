@@ -26,7 +26,7 @@ import java.util.Optional;
  */
 public class PaceManTrackerPluginInit implements PluginInitializer {
     private static LockUtil.LockStuff lockStuff;
-    private static boolean shouldRun = false;
+    private static boolean shouldRun = true;
 
     public static void main(String[] args) throws IOException {
         // This is only used to test the plugin in the dev environment
