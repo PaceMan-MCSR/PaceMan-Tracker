@@ -36,7 +36,7 @@ public class ItemTracker {
 
         JsonObject json = GSON.fromJson(new String(Files.readAllBytes(recordFile)), JsonObject.class);
 
-        if (!json.keySet().contains("stats")) {
+        if (json == null || !json.keySet().contains("stats")) {
             return;
         }
 
