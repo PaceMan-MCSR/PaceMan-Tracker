@@ -81,6 +81,7 @@ public class PacemanGGUtil {
         try {
             lastModifiedTime = Files.getLastModifiedTime(Paths.get(lastWorldPathString)).to(TimeUnit.MILLISECONDS);
         } catch (IOException e) {
+            PaceManTracker.logError("Failed to get modification time of world folder! " + ExceptionUtil.toDetailedString(e));
             lastModifiedTime = SESSION_RANDOM;
         }
         return PacemanGGUtil.sha256Hash(lastWorldPathString + ";" + lastModifiedTime);
