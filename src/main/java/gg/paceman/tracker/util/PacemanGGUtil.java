@@ -9,16 +9,21 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class PacemanGGUtil {
     private static final String PACEMANGG_EVENT_ENDPOINT = "https://paceman.gg/api/sendevent";
     private static final String PACEMANGG_TEST_ENDPOINT = "https://paceman.gg/api/test";
     private static final int MIN_DENY_CODE = 400;
+    private static final long SESSION_RANDOM = new SecureRandom().nextLong();
 
     public static PaceManResponse sendCancelToPacemanGG(String accessKey) {
         JsonObject eventModelInput = new JsonObject();
@@ -37,7 +42,7 @@ public class PacemanGGUtil {
 
         if (latestWorldContents != null) {
             JsonObject latestWorldJson = new Gson().fromJson(latestWorldContents, JsonObject.class);
-            String worldId = PacemanGGUtil.sha256Hash(latestWorldJson.get("world_path").getAsString());
+            String worldId = PacemanGGUtil.createWorldId(latestWorldJson);
             JsonArray mods = latestWorldJson.getAsJsonArray("mods");
             String gameVersion = latestWorldJson.get("version").getAsString();
             String srIGTVersion = latestWorldJson.has("mod_version") ? (latestWorldJson.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
@@ -68,6 +73,17 @@ public class PacemanGGUtil {
         String toSend = eventModelInput.toString();
         PaceManTracker.logDebug("Sending exactly: " + toSend.replace(accessKey, "KEY_HIDDEN"));
         return PacemanGGUtil.sendToPacemanGG(toSend);
+    }
+
+    private static String createWorldId(JsonObject latestWorldJson) {
+        String lastWorldPathString = latestWorldJson.get("world_path").getAsString();
+        long lastModifiedTime;
+        try {
+            lastModifiedTime = Files.getLastModifiedTime(Paths.get(lastWorldPathString)).to(TimeUnit.MILLISECONDS);
+        } catch (IOException e) {
+            lastModifiedTime = SESSION_RANDOM;
+        }
+        return PacemanGGUtil.sha256Hash(lastWorldPathString + ";" + lastModifiedTime);
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
