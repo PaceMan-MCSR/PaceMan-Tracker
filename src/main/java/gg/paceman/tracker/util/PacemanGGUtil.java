@@ -11,6 +11,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -77,14 +78,14 @@ public class PacemanGGUtil {
 
     private static String createWorldId(JsonObject latestWorldJson) {
         String lastWorldPathString = latestWorldJson.get("world_path").getAsString();
-        long lastModifiedTime;
+        long hashAddon;
         try {
-            lastModifiedTime = Files.getLastModifiedTime(Paths.get(lastWorldPathString)).to(TimeUnit.MILLISECONDS);
+            hashAddon = ((FileTime) Files.getAttribute(Paths.get(lastWorldPathString), "creationTime")).to(TimeUnit.MILLISECONDS);
         } catch (IOException e) {
             PaceManTracker.logError("Failed to get modification time of world folder! " + ExceptionUtil.toDetailedString(e));
-            lastModifiedTime = SESSION_RANDOM;
+            hashAddon = SESSION_RANDOM;
         }
-        return PacemanGGUtil.sha256Hash(lastWorldPathString + ";" + lastModifiedTime);
+        return PacemanGGUtil.sha256Hash(lastWorldPathString + ";" + hashAddon);
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
