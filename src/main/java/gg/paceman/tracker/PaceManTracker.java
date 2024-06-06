@@ -206,13 +206,13 @@ public class PaceManTracker {
         if (this.headerToSend != null) {
             JsonObject latestWorldJson = new Gson().fromJson(this.headerToSend, JsonObject.class);
             JsonArray mods = latestWorldJson.getAsJsonArray("mods");
-            String worldId = latestWorldJson.get("world_path").getAsString() + this.worldUniquifier;
+            String worldId = PaceManTracker.sha256Hash(latestWorldJson.get("world_path").getAsString() + this.worldUniquifier);
             String gameVersion = latestWorldJson.get("version").getAsString();
             String srIGTVersion = latestWorldJson.has("mod_version") ? (latestWorldJson.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
             String category = latestWorldJson.get("category").getAsString();
 
             JsonObject gameData = new JsonObject();
-            gameData.addProperty("worldId", PaceManTracker.sha256Hash(worldId));
+            gameData.addProperty("worldId", worldId);
             gameData.addProperty("gameVersion", gameVersion);
             gameData.addProperty("modVersion", srIGTVersion);
             gameData.addProperty("category", category);
