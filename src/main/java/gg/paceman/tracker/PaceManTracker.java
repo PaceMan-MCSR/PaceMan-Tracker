@@ -94,7 +94,7 @@ public class PaceManTracker {
         warningConsumer.accept(error);
     }
 
-    private static boolean areAtumSettingsAreGood(Path worldPath) throws IOException {
+    private static boolean areAtumSettingsGood(Path worldPath) throws IOException {
         // .minecraft/saves/x -> .minecraft/saves -> .minecraft -> .minecraft/config -> .minecraft/config/atum -> .minecraft/config/atum/atum.properties
         Path atumPropPath = worldPath.getParent().getParent().resolve("config").resolve("atum").resolve("atum.properties");
         if (!Files.exists(atumPropPath)) {
@@ -324,7 +324,7 @@ public class PaceManTracker {
             }
 
             try {
-                if (isRandomSpeedrunWorld && !PaceManTracker.areAtumSettingsAreGood(this.eventTracker.getWorldPath())) {
+                if (isRandomSpeedrunWorld && !PaceManTracker.areAtumSettingsGood(this.eventTracker.getWorldPath())) {
                     PaceManTracker.logWarning("Your atum settings have issues! Please ensure your atum is set to default generation type with bonus chests off!");
                     this.setRunProgress(RunProgress.ENDED);
                 }
