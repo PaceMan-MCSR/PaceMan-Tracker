@@ -5,7 +5,6 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import gg.paceman.tracker.PaceManTracker;
 import gg.paceman.tracker.PaceManTrackerOptions;
-import gg.paceman.tracker.util.PacemanGGUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -118,7 +117,7 @@ public class PaceManTrackerGUI extends JFrame {
             return;
         }
 
-        PacemanGGUtil.PostResponse response = PacemanGGUtil.testAccessKey(options.accessKey);
+        PaceManTracker.PostResponse response = PaceManTracker.testAccessKey(options.accessKey);
         if (response.getCode() >= 300) {
             onFailure.accept("Access key is not valid! (" + response.getCode() + ": " + response.getMessage() + ")");
             return;

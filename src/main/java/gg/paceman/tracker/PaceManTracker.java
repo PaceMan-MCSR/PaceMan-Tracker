@@ -1,14 +1,21 @@
 package gg.paceman.tracker;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import gg.paceman.tracker.util.ExceptionUtil;
-import gg.paceman.tracker.util.PacemanGGUtil;
 import gg.paceman.tracker.util.SleepUtil;
 import gg.paceman.tracker.util.VersionUtil;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -17,6 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * The actual logic and stuff for the PaceMan Tracker
@@ -48,6 +56,11 @@ public class PaceManTracker {
     public static Consumer<String> errorConsumer = System.out::println;
     public static Consumer<String> warningConsumer = System.out::println;
 
+
+    public static final String PACEMANGG_EVENT_ENDPOINT = "https://paceman.gg/api/sendevent";
+    private static final String PACEMANGG_TEST_ENDPOINT = "https://paceman.gg/api/test";
+    private static final int MIN_DENY_CODE = 400;
+
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
     private final ItemTracker itemTracker = new ItemTracker();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -57,6 +70,7 @@ public class PaceManTracker {
     private boolean runOnPaceMan = false;
     private RunProgress runProgress = RunProgress.NONE;
     private final List<String> eventsToSend = new ArrayList<>();
+    private String worldUniquifier = "";
 
     private long nextDebugPrint = -1;
 
@@ -100,6 +114,141 @@ public class PaceManTracker {
             }
         }
         return true;
+    }
+
+    private static PaceManResponse sendToPacemanGG(String toSend) {
+        int responseCode;
+        try {
+            PostResponse out = PaceManTracker.sendData(PACEMANGG_EVENT_ENDPOINT, toSend);
+            responseCode = out.code;
+            PaceManTracker.logDebug("Response " + responseCode + ": " + out.message);
+        } catch (IOException e) {
+            return PaceManResponse.SEND_ERROR;
+        }
+
+        if (responseCode < MIN_DENY_CODE) {
+            return PaceManResponse.SUCCESS;
+        } else {
+            return PaceManResponse.DENIED;
+        }
+    }
+
+    private static String sha256Hash(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    public static PostResponse sendData(String endpointUrl, String jsonData) throws IOException {
+        // Create URL object
+        URL url = new URL(endpointUrl);
+        HttpURLConnection connection = null;
+        try {
+            // Open connection
+            connection = (HttpURLConnection) url.openConnection();
+
+            // Set the necessary properties
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+
+            // Write JSON data to the connection output stream
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonData.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+            int responseCode = connection.getResponseCode();
+            String message = responseCode >= 400 ? PaceManTracker.readStream(connection.getErrorStream()) : connection.getResponseMessage();
+
+
+            // Return the response code
+            return new PostResponse(responseCode, message);
+        } finally {
+            // Close the connection
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    public static PostResponse testAccessKey(String accessKey) {
+        JsonObject testModelInput = new JsonObject();
+        testModelInput.addProperty("accessKey", accessKey);
+        try {
+            return PaceManTracker.sendData(PACEMANGG_TEST_ENDPOINT, testModelInput.toString());
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static String readStream(InputStream inputStream) {
+        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
+    }
+
+    public PaceManResponse sendEventsToPacemanGG() {
+        PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+
+        JsonObject eventModelInput = new JsonObject();
+        eventModelInput.addProperty("accessKey", options.accessKey);
+
+        if (this.headerToSend != null) {
+            JsonObject latestWorldJson = new Gson().fromJson(this.headerToSend, JsonObject.class);
+            JsonArray mods = latestWorldJson.getAsJsonArray("mods");
+            String worldId = latestWorldJson.get("world_path").getAsString() + this.worldUniquifier;
+            String gameVersion = latestWorldJson.get("version").getAsString();
+            String srIGTVersion = latestWorldJson.has("mod_version") ? (latestWorldJson.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
+            String category = latestWorldJson.get("category").getAsString();
+
+            JsonObject gameData = new JsonObject();
+            gameData.addProperty("worldId", PaceManTracker.sha256Hash(worldId));
+            gameData.addProperty("gameVersion", gameVersion);
+            gameData.addProperty("modVersion", srIGTVersion);
+            gameData.addProperty("category", category);
+            gameData.add("modList", mods);
+            gameData.addProperty("trackerVersion", VERSION);
+
+            eventModelInput.add("gameData", gameData);
+        }
+
+        JsonArray eventList = new JsonArray();
+        this.eventsToSend.forEach(eventList::add);
+        eventModelInput.add("eventList", eventList);
+
+        eventModelInput.addProperty("timeSinceRunStart", this.getTimeSinceRunStart());
+
+        Optional<JsonObject> itemDataOpt = this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS, IMPORTANT_ITEM_USAGES);
+        itemDataOpt.ifPresent(itemData -> {
+            if (!itemData.keySet().isEmpty()) {
+                eventModelInput.add("itemData", itemData);
+            }
+        });
+
+        String toSend = eventModelInput.toString();
+        PaceManTracker.logDebug("Sending exactly: " + toSend.replace(options.accessKey, "KEY_HIDDEN"));
+        return PaceManTracker.sendToPacemanGG(toSend);
+    }
+
+    public PaceManResponse sendCancelToPacemanGG() {
+        JsonObject eventModelInput = new JsonObject();
+        // Access Key
+        eventModelInput.addProperty("accessKey", PaceManTrackerOptions.getInstance().accessKey);
+        // Empty Event List
+        eventModelInput.add("eventList", new JsonArray());
+        // Kill flag
+        eventModelInput.addProperty("kill", true);
+        return PaceManTracker.sendToPacemanGG(eventModelInput.toString());
     }
 
     private boolean shouldRun() {
@@ -224,6 +373,19 @@ public class PaceManTracker {
                 break;
             } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
                 PaceManTracker.logDebug("PaceMan Tracker start event reached!");
+                switch (parts.length) {
+                    case 3: // should always be this
+                        this.worldUniquifier = ";" + eventName + ";" + parts[1] + ";" + parts[2];
+                        break;
+                    case 2:
+                        PaceManTracker.logWarning("Event log contained only 2 parts for an event line! \"" + line + "\"");
+                        this.worldUniquifier = ";" + eventName + ";" + parts[1];
+                        break;
+                    default:
+                        PaceManTracker.logWarning("Event log contained a strange number of parts for an event line! \"" + line + "\"");
+                        this.worldUniquifier = eventName;
+                        break;
+                }
                 this.setRunProgress(RunProgress.PACING);
             }
             // Determine if the event is recent enough to dump
@@ -256,8 +418,8 @@ public class PaceManTracker {
         PaceManTracker.logDebug("Telling Paceman to cancel the run.");
         int tries = 0;
         // While sending gives back an error
-        while (PacemanGGUtil.PaceManResponse.SEND_ERROR == (
-                PacemanGGUtil.sendCancelToPacemanGG(PaceManTrackerOptions.getInstance().accessKey)
+        while (PaceManResponse.SEND_ERROR == (
+                this.sendCancelToPacemanGG()
         )) {
             if (++tries < 5) {
                 // Wait 5 seconds on failure before retry.
@@ -277,18 +439,10 @@ public class PaceManTracker {
 
     private void dumpToPacemanGG() {
         PaceManTracker.logDebug("Dumping to paceman");
-        PacemanGGUtil.PaceManResponse response;
+        PaceManResponse response;
         int tries = 0;
         // While sending gives back an error
-        while (PacemanGGUtil.PaceManResponse.SEND_ERROR == (
-                response = PacemanGGUtil.sendEventsToPacemanGG(
-                        PaceManTrackerOptions.getInstance().accessKey,
-                        this.headerToSend,
-                        this.eventsToSend,
-                        this.getTimeSinceRunStart(),
-                        this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS, IMPORTANT_ITEM_USAGES)
-                )
-        )) {
+        while (PaceManResponse.SEND_ERROR == (response = this.sendEventsToPacemanGG())) {
             if (++tries < 5) {
                 // Wait 5 seconds on failure before retry.
                 PaceManTracker.logError("Failed to send to PaceMan.gg, retrying in 5 seconds...");
@@ -297,11 +451,11 @@ public class PaceManTracker {
                 break;
             }
         }
-        if (response == PacemanGGUtil.PaceManResponse.DENIED) {
+        if (response == PaceManResponse.DENIED) {
             // Deny response = cancel the run
             PaceManTracker.logError("PaceMan.gg denied run data, no more data will be sent for this run.");
             this.endRun();
-        } else if (response == PacemanGGUtil.PaceManResponse.SEND_ERROR) {
+        } else if (response == PaceManResponse.SEND_ERROR) {
             PaceManTracker.logError("Failed to send to PaceMan.gg after a couple tries, no more data will be sent for this run.");
             this.endRun();
         } else {
@@ -334,5 +488,29 @@ public class PaceManTracker {
 
     private enum RunProgress {
         NONE, STARTING, PACING, ENDED
+    }
+
+    public enum PaceManResponse {
+        SUCCESS, // 201 response
+        DENIED, // non 201 response
+        SEND_ERROR // error while trying to send
+    }
+
+    public static class PostResponse {
+        private final int code;
+        private final String message;
+
+        private PostResponse(int code, String message) {
+            this.code = code;
+            this.message = message;
+        }
+
+        public int getCode() {
+            return this.code;
+        }
+
+        public String getMessage() {
+            return this.message;
+        }
     }
 }
