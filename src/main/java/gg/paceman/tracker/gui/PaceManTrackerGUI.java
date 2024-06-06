@@ -118,8 +118,8 @@ public class PaceManTrackerGUI extends JFrame {
         }
 
         PaceManTracker.PostResponse response = PaceManTracker.testAccessKey(options.accessKey);
-        if (response.getCode() >= 300) {
-            onFailure.accept("Access key is not valid! (" + response.getCode() + ": " + response.getMessage() + ")");
+        if (response == null || response.getCode() >= 300) {
+            onFailure.accept(response == null ? "Access key is not valid! (no response)" : "Access key is not valid! (" + response.getCode() + ": " + response.getMessage() + ")");
             return;
         }
 
