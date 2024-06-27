@@ -240,7 +240,7 @@ public class PaceManTracker {
 
         eventModelInput.addProperty("timeSinceRunStart", this.getTimeSinceRunStart());
 
-        Optional<JsonObject> itemDataOpt = this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS, IMPORTANT_ITEM_USAGES);
+        Optional<JsonObject> itemDataOpt = this.constructItemData();
         itemDataOpt.ifPresent(itemData -> {
             if (!itemData.keySet().isEmpty()) {
                 eventModelInput.add("itemData", itemData);
@@ -250,6 +250,13 @@ public class PaceManTracker {
         String toSend = eventModelInput.toString();
         PaceManTracker.logDebug("Sending exactly: " + toSend.replace(options.accessKey, "KEY_HIDDEN"));
         return PaceManTracker.sendToPacemanGG(toSend);
+    }
+
+    private Optional<JsonObject> constructItemData() {
+        if (this.eventTracker.getGameVersion().equals("1.16.1")) {
+            return this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS, IMPORTANT_ITEM_USAGES);
+        }
+        return Optional.empty();
     }
 
     public PaceManResponse sendCancelToPacemanGG() {
@@ -350,7 +357,9 @@ public class PaceManTracker {
             }
         }
 
-        this.itemTracker.tryUpdate(this.eventTracker.getWorldPath());
+        if (this.eventTracker.getGameVersion().equals("1.16.1")) {
+            this.itemTracker.tryUpdate(this.eventTracker.getWorldPath());
+        }
 
         List<String> latestNewLines = this.eventTracker.getLatestNewLines();
         if (!latestNewLines.isEmpty()) {
