@@ -7,6 +7,7 @@ import gg.paceman.tracker.util.ExceptionUtil;
 import gg.paceman.tracker.util.SleepUtil;
 import gg.paceman.tracker.util.VersionUtil;
 
+import javax.annotation.Nullable;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -23,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -36,8 +38,11 @@ public class PaceManTracker {
     // If any end events are reached and no events have been sent for the current run, then prevent sending anything.
     // If events have already been sent for this run, then send the end event and then send no more events
     private static final List<String> END_EVENTS = Arrays.asList("common.multiplayer", "common.old_world", "common.open_to_lan", "common.enable_cheats", "common.view_seed", "rsg.credits");
+
     // If any start event is reached for the first time for this run, enable sending events for this run, send the header and all events so far.
-    private static final List<String> START_EVENTS = Collections.singletonList("rsg.enter_nether");
+    private static final Set<String> DEFAULT_START_EVENTS = Collections.singleton("rsg.enter_nether");
+    private static final Map<Integer, Set<String>> START_EVENTS_MAP = new HashMap<>();
+
     // Unimportant events are not considered when determining if an event is recent enough to send the run to PaceMan
     private static final List<String> UNIMPORTANT_EVENTS = Arrays.asList("common.leave_world", "common.rejoin_world");
 
@@ -45,11 +50,12 @@ public class PaceManTracker {
     private static final Set<String> IMPORTANT_ITEM_USAGES = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian"));
 
     private static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
+    private static final Pattern GAME_VERSION_PATTERN = Pattern.compile("1\\.(\\d+)(?:\\.\\d+)?");
 
     private static final long RUN_TOO_LONG_MILLIS = 3_600_000; // 1 hour
     private static final long EVENT_RECENT_ENOUGH_MILLIS = 60_000; // 1 minute
 
-    public static final Queue<Runnable> MAIN_THREAD_TODO = new ConcurrentLinkedQueue<>();
+    public static final Queue<Runnable> MAIN_THREAD_TODO = new ConcurrentLinkedQueue<>(); // wtf did I want this for?
 
     public static Consumer<String> logConsumer = System.out::println;
     public static Consumer<String> debugConsumer = System.out::println;
@@ -60,6 +66,12 @@ public class PaceManTracker {
     public static final String PACEMANGG_EVENT_ENDPOINT = "https://paceman.gg/api/sendevent";
     private static final String PACEMANGG_TEST_ENDPOINT = "https://paceman.gg/api/test";
     private static final int MIN_DENY_CODE = 400;
+
+    static {
+        START_EVENTS_MAP.put(8, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade"))); // 1.8
+        START_EVENTS_MAP.put(14, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade"))); // 1.14
+        START_EVENTS_MAP.put(15, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade"))); // 1.15
+    }
 
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
     private final ItemTracker itemTracker = new ItemTracker();
@@ -354,6 +366,12 @@ public class PaceManTracker {
             return;
         }
 
+        Set<String> startEvents = this.getStartEvents();
+        if (startEvents == null) { // startEvents is null when mc version is invalid (snapshot/april fools probably)
+            this.endRun();
+            return;
+        }
+
         boolean shouldDump = this.runOnPaceMan;
 
         for (String line : latestNewLines) {
@@ -402,6 +420,16 @@ public class PaceManTracker {
         if (shouldDump) {
             this.dumpToPacemanGG();
         }
+    }
+
+    @Nullable
+    private Set<String> getStartEvents() {
+        Matcher matcher = GAME_VERSION_PATTERN.matcher(this.eventTracker.getGameVersion());
+        if (!matcher.matches()) {
+            return null; // lol snapshot?
+        }
+        int mcMajorRelease = Integer.parseInt(matcher.group(1));
+        return START_EVENTS_MAP.getOrDefault(mcMajorRelease, DEFAULT_START_EVENTS);
     }
 
     private void showRunningDebug() {
