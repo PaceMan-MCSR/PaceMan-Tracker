@@ -56,14 +56,12 @@ jar {
     exclude "julti.plugin.json"
 }
 
-tasks.register('pluginJar', Jar) {
+task pluginJar(type: Jar) {
     duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
     archiveBaseName = "${project.archives_base_name}-plugin"
     from sourceSets.main.output
 }
 
-tasks.register('buildJars') {
-    dependsOn 'build'
-    dependsOn 'pluginJar'
-    tasks.named('build').get().mustRunAfter 'pluginJar'
+artifacts {
+    archives pluginJar
 }
