@@ -306,7 +306,6 @@ public class PaceManTracker {
     }
 
     private void tick() {
-        this.showRunningDebug();
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
 
         while (!MAIN_THREAD_TODO.isEmpty()) {
@@ -439,16 +438,6 @@ public class PaceManTracker {
         }
         int mcMajorRelease = Integer.parseInt(matcher.group(1));
         return START_EVENTS_MAP.getOrDefault(mcMajorRelease, DEFAULT_START_EVENTS);
-    }
-
-    private void showRunningDebug() {
-        if (System.currentTimeMillis() < this.nextDebugPrint) return;
-        if (this.nextDebugPrint == -1) {
-            this.nextDebugPrint = System.currentTimeMillis() + 60_000;
-        } else {
-            this.nextDebugPrint += 60_000;
-        }
-        PaceManTracker.logDebug("PaceMan Tracker is running! (" + Instant.now() + ")");
     }
 
     private void sendCancel() {
