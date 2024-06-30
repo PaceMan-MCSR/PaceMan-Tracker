@@ -123,9 +123,9 @@ public class EventTracker {
         this.latestNewLines = Arrays.stream(newContents.split("\n")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
         if (this.runStartTime == -1 && !this.latestNewLines.isEmpty()) {
             BasicFileAttributes eventsLogAttributes = Files.readAttributes(this.eventLogPath, BasicFileAttributes.class);
-            long eventsLogCreation = eventsLogAttributes.creationTime().toMillis();
-            long firstEventRealTime = Long.parseLong(this.latestNewLines.get(0).split(" ")[1]);
-            this.runStartTime = eventsLogCreation - firstEventRealTime;
+            long eventsLogLastMTime = eventsLogAttributes.lastModifiedTime().toMillis();
+            long lastEventRT = Long.parseLong(this.latestNewLines.get(this.latestNewLines.size() - 1).split(" ")[1]);
+            this.runStartTime = eventsLogLastMTime - lastEventRT;
         }
         return true;
     }
