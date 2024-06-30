@@ -398,7 +398,7 @@ public class PaceManTracker {
                 this.endRun();
                 shouldDump = false;
                 break;
-            } else if (this.runProgress != RunProgress.PACING && START_EVENTS.contains(eventName)) {
+            } else if (this.runProgress != RunProgress.PACING && startEvents.contains(eventName)) {
                 PaceManTracker.logDebug("PaceMan Tracker start event reached!");
                 switch (parts.length) {
                     case 3: // should always be this
