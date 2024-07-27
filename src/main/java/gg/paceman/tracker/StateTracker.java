@@ -200,6 +200,10 @@ public class StateTracker {
         }
 
         int newResets = this.resets - this.lastResets;
+
+        // add the overworld time spent in this run to playTime
+        this.playTime += System.currentTimeMillis() - this.playingStart;
+
         JsonObject input = new JsonObject();
         input.addProperty("gameData", gameData.toString());
         input.addProperty("accessKey", data.get("accessKey").getAsString());
