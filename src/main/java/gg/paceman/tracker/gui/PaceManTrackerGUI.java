@@ -23,6 +23,7 @@ public class PaceManTrackerGUI extends JFrame {
     private JPanel mainPanel;
     private JButton saveButton;
     private JButton testButton;
+    private JCheckBox resetStatsEnabled;
     private boolean closed = false;
     private final boolean asPlugin;
 
@@ -48,6 +49,10 @@ public class PaceManTrackerGUI extends JFrame {
             if (asPlugin) {
                 this.accessKeyField.setEnabled(this.checkBoxEnabled());
             }
+        });
+        this.resetStatsEnabled.setSelected(options.resetStatsEnabled);
+        this.resetStatsEnabled.addActionListener(e -> {
+            this.saveButton.setEnabled(this.hasChanges());
         });
         this.accessKeyField.setText(options.accessKey);
         this.accessKeyField.addKeyListener(new KeyAdapter() {
@@ -128,12 +133,13 @@ public class PaceManTrackerGUI extends JFrame {
 
     private boolean hasChanges() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
-        return (this.asPlugin && this.checkBoxEnabled() != options.enabledForPlugin) || (!Objects.equals(this.getKeyBoxText(), options.accessKey));
+        return (this.asPlugin && this.checkBoxEnabled() != options.enabledForPlugin) || (this.resetStatsEnabled() != options.resetStatsEnabled) || (!Objects.equals(this.getKeyBoxText(), options.accessKey));
     }
 
     private void save() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
         options.enabledForPlugin = this.checkBoxEnabled();
+        options.resetStatsEnabled = this.resetStatsEnabled();
         options.accessKey = this.getKeyBoxText().trim();
         try {
             options.save();
@@ -151,6 +157,10 @@ public class PaceManTrackerGUI extends JFrame {
 
     private boolean checkBoxEnabled() {
         return this.enabledCheckBox.isSelected();
+    }
+
+    private boolean resetStatsEnabled() {
+        return this.resetStatsEnabled.isSelected();
     }
 
     private String getKeyBoxText() {
@@ -185,16 +195,19 @@ public class PaceManTrackerGUI extends JFrame {
      */
     private void $$$setupUI$$$() {
         mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayoutManager(5, 2, new Insets(5, 5, 5, 5), -1, -1));
+        mainPanel.setLayout(new GridLayoutManager(6, 2, new Insets(5, 5, 5, 5), -1, -1));
         final JLabel label1 = new JLabel();
         label1.setText("PaceMan Tracker");
         mainPanel.add(label1, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         enabledCheckBox = new JCheckBox();
         enabledCheckBox.setText("Enabled");
         mainPanel.add(enabledCheckBox, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        resetStatsEnabled = new JCheckBox();
+        resetStatsEnabled.setText("Include resetting stats");
+        mainPanel.add(resetStatsEnabled, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel1 = new JPanel();
         panel1.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
-        mainPanel.add(panel1, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        mainPanel.add(panel1, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         accessKeyField = new JPasswordField();
         accessKeyField.setText("");
         panel1.add(accessKeyField, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
@@ -202,13 +215,13 @@ public class PaceManTrackerGUI extends JFrame {
         label2.setText("Access Key:");
         panel1.add(label2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        mainPanel.add(spacer1, new GridConstraints(4, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        mainPanel.add(spacer1, new GridConstraints(5, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         saveButton = new JButton();
         saveButton.setText("Save");
-        mainPanel.add(saveButton, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        mainPanel.add(saveButton, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         testButton = new JButton();
         testButton.setText("Test");
-        mainPanel.add(testButton, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        mainPanel.add(testButton, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
     }
 
     /**

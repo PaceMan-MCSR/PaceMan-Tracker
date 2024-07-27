@@ -192,6 +192,10 @@ public class StateTracker {
     }
 
     public void dumpStats(JsonObject data){
+        if(!PaceManTrackerOptions.getInstance().resetStatsEnabled){
+            PaceManTracker.logDebug("Not submitting stats since user opted out");
+            return;
+        }
         JsonObject gameData = data.getAsJsonObject("gameData");
         String mods = gameData.getAsJsonArray("modList").toString();
         if(!mods.contains("seedqueue") || !mods.contains("state-output")){
