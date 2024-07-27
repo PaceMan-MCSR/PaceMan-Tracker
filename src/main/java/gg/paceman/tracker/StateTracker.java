@@ -185,10 +185,11 @@ public class StateTracker {
 
     }
 
-    public void dumpStats(){
+    public void dumpStats(String worldId){
         int newResets = this.resets - this.lastResets;
         JsonObject input = new JsonObject();
         input.addProperty("accessKey", PaceManTrackerOptions.getInstance().accessKey);
+        input.addProperty("worldId", worldId);
         input.addProperty("wallTime", this.wallTime);
         input.addProperty("playTime", this.playTime);
         input.addProperty("seedsPlayed", this.seedsPlayed);

@@ -216,10 +216,12 @@ public class PaceManTracker {
         JsonObject eventModelInput = new JsonObject();
         eventModelInput.addProperty("accessKey", options.accessKey);
 
+        String worldId = "";
+
         if (this.headerToSend != null) {
             JsonObject latestWorldJson = new Gson().fromJson(this.headerToSend, JsonObject.class);
             JsonArray mods = latestWorldJson.getAsJsonArray("mods");
-            String worldId = PaceManTracker.sha256Hash(latestWorldJson.get("world_path").getAsString() + this.worldUniquifier);
+            worldId = PaceManTracker.sha256Hash(latestWorldJson.get("world_path").getAsString() + this.worldUniquifier);
             String gameVersion = latestWorldJson.get("version").getAsString();
             String srIGTVersion = latestWorldJson.has("mod_version") ? (latestWorldJson.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
             String category = latestWorldJson.get("category").getAsString();
@@ -250,7 +252,21 @@ public class PaceManTracker {
 
         String toSend = eventModelInput.toString();
         PaceManTracker.logDebug("Sending exactly: " + toSend.replace(options.accessKey, "KEY_HIDDEN"));
-        return PaceManTracker.sendToPacemanGG(toSend);
+
+        PaceManResponse response = PaceManTracker.sendToPacemanGG(toSend);
+
+        if(response == PaceManResponse.SUCCESS && !this.runOnPaceMan && !worldId.isEmpty()){
+            PaceManTracker.logDebug("Submitting reset stats");
+            try {
+                this.stateTracker.dumpStats(worldId);
+            } catch (Throwable t) {
+                String detailedString = ExceptionUtil.toDetailedString(t);
+                PaceManTracker.logWarning("Error while submitting stats: " + detailedString);
+                PaceManTracker.logWarning("The above error only affects the NPH stats tracking.");
+            }
+        }
+
+        return response;
     }
 
     private Optional<JsonObject> constructItemData() {
@@ -490,16 +506,6 @@ public class PaceManTracker {
             PaceManTracker.logDebug("Successfully sent to PaceMan.gg");
             this.headerToSend = null;
             this.eventsToSend.clear();
-            if(!this.runOnPaceMan){
-                PaceManTracker.logDebug("Submitting reset stats");
-                try {
-                    this.stateTracker.dumpStats();
-                } catch (Throwable t) {
-                    String detailedString = ExceptionUtil.toDetailedString(t);
-                    PaceManTracker.logWarning("Error while submitting stats: " + detailedString);
-                    PaceManTracker.logWarning("The above error only affects the NPH stats tracking.");
-                }
-            }
             this.runOnPaceMan = true;
         }
     }
