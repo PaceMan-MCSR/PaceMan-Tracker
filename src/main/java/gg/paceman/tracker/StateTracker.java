@@ -19,6 +19,8 @@ public class StateTracker {
     }
 
     private final int breakThreshold = 5000;
+    // cap each overworld segment to at most 10 minutes in case of afk
+    private final int maxPlayTime = 1000 * 60 * 10;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private Path lastWorldPath;
@@ -137,7 +139,7 @@ public class StateTracker {
         if(oldState == State.PLAYING && newState != State.PLAYING){
             if(!this.isPracticing && !this.isNether){
                 // commit playtime
-                long playDiff = newLM - this.playingStart;
+                long playDiff = Math.min(this.maxPlayTime, newLM - this.playingStart);
                 this.playTime += playDiff;
             }
             this.isPracticing = false;
@@ -205,8 +207,9 @@ public class StateTracker {
 
         int newResets = this.resets - this.lastResets;
 
-        // add the overworld time spent in this run to playTime
-        this.playTime += System.currentTimeMillis() - this.playingStart;
+        // add the overworld time (capped) spent in this run to playTime
+        long diff = Math.min(this.maxPlayTime, System.currentTimeMillis() - this.playingStart);
+        this.playTime += diff;
 
         JsonObject input = new JsonObject();
         input.addProperty("gameData", gameData.toString());
