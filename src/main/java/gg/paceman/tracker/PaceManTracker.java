@@ -216,12 +216,10 @@ public class PaceManTracker {
         JsonObject eventModelInput = new JsonObject();
         eventModelInput.addProperty("accessKey", options.accessKey);
 
-        String worldId = "";
-
         if (this.headerToSend != null) {
             JsonObject latestWorldJson = new Gson().fromJson(this.headerToSend, JsonObject.class);
             JsonArray mods = latestWorldJson.getAsJsonArray("mods");
-            worldId = PaceManTracker.sha256Hash(latestWorldJson.get("world_path").getAsString() + this.worldUniquifier);
+            String worldId = PaceManTracker.sha256Hash(latestWorldJson.get("world_path").getAsString() + this.worldUniquifier);
             String gameVersion = latestWorldJson.get("version").getAsString();
             String srIGTVersion = latestWorldJson.has("mod_version") ? (latestWorldJson.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
             String category = latestWorldJson.get("category").getAsString();
@@ -255,10 +253,10 @@ public class PaceManTracker {
 
         PaceManResponse response = PaceManTracker.sendToPacemanGG(toSend);
 
-        if(response == PaceManResponse.SUCCESS && !this.runOnPaceMan && !worldId.isEmpty()){
+        if(response == PaceManResponse.SUCCESS && !this.runOnPaceMan && this.headerToSend != null){
             PaceManTracker.logDebug("Submitting reset stats");
             try {
-                this.stateTracker.dumpStats(worldId);
+                this.stateTracker.dumpStats(eventModelInput);
             } catch (Throwable t) {
                 String detailedString = ExceptionUtil.toDetailedString(t);
                 PaceManTracker.logWarning("Error while submitting stats: " + detailedString);

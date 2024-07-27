@@ -42,7 +42,7 @@ public class StateTracker {
     private long playTime = 0;
     private long wallTime = 0;
 
-    private static final String SUBMIT_STATS_ENDPOINT = "https://paceman.gg/stats/api/submitStats";
+    private static final String SUBMIT_STATS_ENDPOINT = "https://paceman.gg/stats/api/submitStats/";
 
     public void start(){
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
@@ -157,10 +157,6 @@ public class StateTracker {
         }
         this.resetsLastMod = newLM;
 
-        if(this.currentState != State.WALL){
-            return;
-        }
-
         int resets = 0;
         for(int i = 0; i < 5; i++){
             String contents = new String(Files.readAllBytes(this.resetsPath), StandardCharsets.UTF_8);
@@ -172,6 +168,15 @@ public class StateTracker {
             break;
         }
 
+        this.resets = resets;
+        if(this.lastResets == 0){
+            this.lastResets = this.resets;
+        }
+
+        if(this.currentState != State.WALL){
+            return;
+        }
+
         // first wall reset
         if(this.lastWallReset == 0){
             this.lastWallReset = newLM;
@@ -179,7 +184,6 @@ public class StateTracker {
         }
 
         long wallDiff = newLM - this.lastWallReset;
-        this.resets = resets;
         this.lastWallReset = newLM;
         if(wallDiff < this.breakThreshold){
             this.wallTime += wallDiff;
@@ -187,11 +191,18 @@ public class StateTracker {
 
     }
 
-    public void dumpStats(String worldId){
+    public void dumpStats(JsonObject data){
+        JsonObject gameData = data.getAsJsonObject("gameData");
+        String mods = gameData.getAsJsonArray("modList").toString();
+        if(!mods.contains("seedqueue") || !mods.contains("state-output")){
+            PaceManTracker.logWarning("Could not submit reset stats as either SeedQueue or State Output is missing");
+            return;
+        }
+
         int newResets = this.resets - this.lastResets;
         JsonObject input = new JsonObject();
-        input.addProperty("accessKey", PaceManTrackerOptions.getInstance().accessKey);
-        input.addProperty("worldId", worldId);
+        input.addProperty("gameData", gameData.toString());
+        input.addProperty("accessKey", data.get("accessKey").getAsString());
         input.addProperty("wallTime", this.wallTime);
         input.addProperty("playTime", this.playTime);
         input.addProperty("seedsPlayed", this.seedsPlayed);
