@@ -35,6 +35,7 @@ public class StateTracker {
     private long lastWallReset = 0;
 
     private boolean isPracticing = false;
+    private boolean isNether = false;
 
     private int seedsPlayed = 0;
     private long playingStart = 0;
@@ -134,12 +135,13 @@ public class StateTracker {
 
         // left instance
         if(oldState == State.PLAYING && newState != State.PLAYING){
-            if(!this.isPracticing){
+            if(!this.isPracticing && !this.isNether){
                 // commit playtime
                 long playDiff = newLM - this.playingStart;
                 this.playTime += playDiff;
             }
             this.isPracticing = false;
+            this.isNether = false;
         }
 
         this.currentState = newState;
@@ -200,6 +202,7 @@ public class StateTracker {
         this.playTime = 0;
         this.wallTime = 0;
         this.seedsPlayed = 0;
+        this.isNether = true;
 
         try {
             PaceManTracker.PostResponse out = PaceManTracker.sendData(SUBMIT_STATS_ENDPOINT, input.toString());
