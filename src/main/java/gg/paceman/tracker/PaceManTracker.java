@@ -49,7 +49,7 @@ public class PaceManTracker {
     private static final Set<String> IMPORTANT_ITEM_COUNTS = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian", "minecraft:blaze_rod"));
     private static final Set<String> IMPORTANT_ITEM_USAGES = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian"));
 
-    private static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
+    public static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
     private static final Pattern GAME_VERSION_PATTERN = Pattern.compile("1\\.(\\d+)(?:\\.\\d+)?");
 
     private static final long RUN_TOO_LONG_MILLIS = 3_600_000; // 1 hour
@@ -75,6 +75,7 @@ public class PaceManTracker {
 
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
     private final ItemTracker itemTracker = new ItemTracker();
+    private final StateTracker stateTracker = new StateTracker();
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private boolean asPlugin;
 
@@ -249,7 +250,21 @@ public class PaceManTracker {
 
         String toSend = eventModelInput.toString();
         PaceManTracker.logDebug("Sending exactly: " + toSend.replace(options.accessKey, "KEY_HIDDEN"));
-        return PaceManTracker.sendToPacemanGG(toSend);
+
+        PaceManResponse response = PaceManTracker.sendToPacemanGG(toSend);
+
+        if(response == PaceManResponse.SUCCESS && !this.runOnPaceMan && this.headerToSend != null){
+            PaceManTracker.logDebug("Submitting reset stats");
+            try {
+                this.stateTracker.dumpStats(eventModelInput);
+            } catch (Throwable t) {
+                String detailedString = ExceptionUtil.toDetailedString(t);
+                PaceManTracker.logWarning("Error while submitting stats: " + detailedString);
+                PaceManTracker.logWarning("The above error only affects the NPH stats tracking.");
+            }
+        }
+
+        return response;
     }
 
     private Optional<JsonObject> constructItemData() {
@@ -282,6 +297,7 @@ public class PaceManTracker {
         this.asPlugin = asPlugin;
         // Run tick every 1 second
         this.executor.scheduleAtFixedRate(this::tryTick, 0, 1, TimeUnit.SECONDS);
+        this.stateTracker.start();
     }
 
     private void tryTick() {
@@ -492,6 +508,10 @@ public class PaceManTracker {
         }
     }
 
+    public Path getWorldPath(){
+        return this.eventTracker.getWorldPath();
+    }
+
     private void endRun() {
         this.setRunProgress(RunProgress.ENDED);
         this.runOnPaceMan = false;
@@ -510,6 +530,7 @@ public class PaceManTracker {
         if (this.runOnPaceMan) {
             this.sendCancel();
         }
+        this.stateTracker.stop();
     }
 
     private enum RunProgress {
