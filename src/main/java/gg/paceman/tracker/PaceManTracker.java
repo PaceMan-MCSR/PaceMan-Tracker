@@ -115,19 +115,19 @@ public class PaceManTracker {
 
         boolean oldExists = Files.exists(oldAtumPropPath);
         boolean newExists = Files.exists(newAtumJsonPath);
-        if(!(oldExists || newExists)){
-            PaceManTracker.logWarning("You must use the Atum mod "+oldAtumPropPath);
+        if (!(oldExists || newExists)) {
+            PaceManTracker.logWarning("You must use the Atum mod " + oldAtumPropPath);
             return false; // no settings exist
         }
 
-        if(oldExists && !PaceManTracker.areOldAtumSettingsGood(oldAtumPropPath)){
-            PaceManTracker.logWarning("Invalid Atum settings found in "+oldAtumPropPath);
+        if (oldExists && !PaceManTracker.areOldAtumSettingsGood(oldAtumPropPath)) {
+            PaceManTracker.logWarning("Invalid Atum settings found in " + oldAtumPropPath);
             PaceManTracker.logWarning("If you are using the newer Atum with more world generation options, you should delete the old config file.");
             return false; // old settings exist and are bad
         }
 
-        if(newExists && !PaceManTracker.areNewAtumSettingsGood(newAtumJsonPath)){
-            PaceManTracker.logWarning("Invalid Atum settings found in "+oldAtumPropPath);
+        if (newExists && !PaceManTracker.areNewAtumSettingsGood(newAtumJsonPath)) {
+            PaceManTracker.logWarning("Invalid Atum settings found in " + oldAtumPropPath);
             PaceManTracker.logWarning("If you are using the older Atum with less world generation options, you should delete the new config file.");
             return false; // new settings exist and are bad
         }
@@ -288,7 +288,7 @@ public class PaceManTracker {
 
         PaceManResponse response = PaceManTracker.sendToPacemanGG(toSend);
 
-        if(response == PaceManResponse.SUCCESS && !this.runOnPaceMan && this.headerToSend != null){
+        if (response == PaceManResponse.SUCCESS && !this.runOnPaceMan && this.headerToSend != null) {
             PaceManTracker.logDebug("Submitting reset stats");
             try {
                 this.stateTracker.dumpStats(eventModelInput);
@@ -542,7 +542,7 @@ public class PaceManTracker {
         }
     }
 
-    public Path getWorldPath(){
+    public Path getWorldPath() {
         return this.eventTracker.getWorldPath();
     }
 

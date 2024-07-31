@@ -14,10 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class StateTracker {
 
-    private enum State {
-        UNKNOWN, IDLE, WALL, LOADING, PLAYING
-    }
-
+    private static final String SUBMIT_STATS_ENDPOINT = "https://paceman.gg/stats/api/submitStats/";
     private final int breakThreshold = 5000;
     // cap each overworld segment to at most 10 minutes in case of afk
     private final int maxPlayTime = 1000 * 60 * 10;
@@ -44,17 +41,15 @@ public class StateTracker {
     private long playTime = 0;
     private long wallTime = 0;
 
-    private static final String SUBMIT_STATS_ENDPOINT = "https://paceman.gg/stats/api/submitStats/";
-
-    public void start(){
+    public void start() {
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::tryTick, 0, 50, TimeUnit.MILLISECONDS);
     }
 
-    public void tickInstPath(){
+    public void tickInstPath() {
         Thread.currentThread().setName("state-tick-inst");
         Path worldPath = PaceManTracker.getInstance().getWorldPath();
-        if(worldPath == null || worldPath.equals(this.lastWorldPath)){
+        if (worldPath == null || worldPath.equals(this.lastWorldPath)) {
             return;
         }
 
@@ -73,7 +68,7 @@ public class StateTracker {
         this.hasResetsFile = Files.exists(this.resetsPath);
     }
 
-    public void tryTick(){
+    public void tryTick() {
         try {
             Thread.currentThread().setName("state-tick");
             this.tick();
@@ -86,7 +81,7 @@ public class StateTracker {
     }
 
     public void tick() throws IOException {
-        if(!this.hasStateFile){
+        if (!this.hasStateFile) {
             return;
         }
         long newLM = Files.getLastModifiedTime(this.statePath).toMillis();
@@ -98,7 +93,7 @@ public class StateTracker {
         State oldState = this.currentState;
         State newState = State.UNKNOWN;
         String state = "";
-        for(int i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             state = new String(Files.readAllBytes(this.statePath), StandardCharsets.UTF_8);
             switch (state.split(",")[0]) {
                 case "wall":
@@ -121,23 +116,23 @@ public class StateTracker {
             }
             break;
         }
-        if(newState == State.UNKNOWN){
+        if (newState == State.UNKNOWN) {
             PaceManTracker.logWarning("State cannot be determined after 3 attempts: " + state);
             return;
         }
 
         // joined instance
-        if(oldState != State.PLAYING && newState == State.PLAYING){
+        if (oldState != State.PLAYING && newState == State.PLAYING) {
             this.playingStart = newLM;
-            if(oldState != State.UNKNOWN){
+            if (oldState != State.UNKNOWN) {
                 // don't increment seeds played counter when tracker is restarted while in a world
                 this.seedsPlayed++;
             }
         }
 
         // left instance
-        if(oldState == State.PLAYING && newState != State.PLAYING){
-            if(!this.isPracticing && !this.isNether){
+        if (oldState == State.PLAYING && newState != State.PLAYING) {
+            if (!this.isPracticing && !this.isNether) {
                 // commit playtime
                 long playDiff = Math.min(this.maxPlayTime, newLM - this.playingStart);
                 this.playTime += playDiff;
@@ -150,7 +145,7 @@ public class StateTracker {
     }
 
     public void tickResets() throws IOException {
-        if(!this.hasResetsFile){
+        if (!this.hasResetsFile) {
             return;
         }
         long newLM = Files.getLastModifiedTime(this.resetsPath).toMillis();
@@ -160,9 +155,9 @@ public class StateTracker {
         this.resetsLastMod = newLM;
 
         int resets = 0;
-        for(int i = 0; i < 5; i++){
+        for (int i = 0; i < 5; i++) {
             String contents = new String(Files.readAllBytes(this.resetsPath), StandardCharsets.UTF_8);
-            if(contents.isEmpty()){
+            if (contents.isEmpty()) {
                 SleepUtil.sleep(5);
                 continue;
             }
@@ -171,36 +166,36 @@ public class StateTracker {
         }
 
         this.resets = resets;
-        if(this.lastResets == 0){
+        if (this.lastResets == 0) {
             this.lastResets = this.resets;
         }
 
-        if(this.currentState != State.WALL){
+        if (this.currentState != State.WALL) {
             return;
         }
 
         // first wall reset
-        if(this.lastWallReset == 0){
+        if (this.lastWallReset == 0) {
             this.lastWallReset = newLM;
             return;
         }
 
         long wallDiff = newLM - this.lastWallReset;
         this.lastWallReset = newLM;
-        if(wallDiff < this.breakThreshold){
+        if (wallDiff < this.breakThreshold) {
             this.wallTime += wallDiff;
         }
 
     }
 
-    public void dumpStats(JsonObject data){
-        if(!PaceManTrackerOptions.getInstance().resetStatsEnabled){
+    public void dumpStats(JsonObject data) {
+        if (!PaceManTrackerOptions.getInstance().resetStatsEnabled) {
             PaceManTracker.logDebug("Not submitting stats since user opted out");
             return;
         }
         JsonObject gameData = data.getAsJsonObject("gameData");
         String mods = gameData.getAsJsonArray("modList").toString();
-        if(!mods.contains("seedqueue") || !mods.contains("state-output")){
+        if (!mods.contains("seedqueue") || !mods.contains("state-output")) {
             PaceManTracker.logWarning("Could not submit reset stats as either SeedQueue or State Output is missing");
             return;
         }
@@ -236,7 +231,7 @@ public class StateTracker {
         }
     }
 
-    public void stop(){
+    public void stop() {
         Thread.currentThread().setName("state-stopping");
         try {
             // Wait for and shutdown executor
@@ -245,6 +240,10 @@ public class StateTracker {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private enum State {
+        UNKNOWN, IDLE, WALL, LOADING, PLAYING
     }
 
 }
