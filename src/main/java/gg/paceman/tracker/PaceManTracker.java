@@ -17,7 +17,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -84,8 +83,6 @@ public class PaceManTracker {
     private RunProgress runProgress = RunProgress.NONE;
     private final List<String> eventsToSend = new ArrayList<>();
     private String worldUniquifier = "";
-
-    private long nextDebugPrint = -1;
 
     public static PaceManTracker getInstance() {
         return INSTANCE;
