@@ -24,7 +24,7 @@ configurations {
 
 dependencies {
     // Choose Julti version: https://jitpack.io/#DuncanRuns/Julti/
-    implementation 'com.github.DuncanRuns:Julti:568fbeb03a'
+    implementation 'com.github.DuncanRuns:Julti:40c2160a68'
 
     provided 'com.jetbrains.intellij.java:java-gui-forms-rt:203.7148.30'
     provided 'com.google.code.gson:gson:2.10'
