@@ -105,7 +105,7 @@ public class PaceManTracker {
         warningConsumer.accept(error);
     }
 
-    private static boolean areAtumSettingsGood(Path worldPath) throws IOException {
+    private static boolean areAtumSettingsGood(Path worldPath) {
         // .minecraft/saves/x -> .minecraft/saves -> .minecraft/config
         Path configPath = worldPath.getParent().resolveSibling("config");
         // .minecraft/config -> .minecraft/config/atum -> .minecraft/config/atum/atum.properties
@@ -120,16 +120,34 @@ public class PaceManTracker {
             return false; // no settings exist
         }
 
-        if (oldExists && !PaceManTracker.areOldAtumSettingsGood(oldAtumPropPath)) {
-            PaceManTracker.logWarning("Invalid Atum settings found in " + oldAtumPropPath);
-            PaceManTracker.logWarning("If you are using the newer Atum with more world generation options, you should delete the old config file.");
-            return false; // old settings exist and are bad
+        if (oldExists) {
+            try {
+                if (!PaceManTracker.areOldAtumSettingsGood(oldAtumPropPath)) {
+                    PaceManTracker.logWarning("Illegal Atum settings found in " + oldAtumPropPath);
+                    PaceManTracker.logWarning("Make sure your Atum settings are set to defaults with no set seed and above peaceful difficulty.");
+                    PaceManTracker.logWarning("If you are using the newer Atum with more world generation options, you should delete the old config file.");
+                    return false; // old settings exist and are bad
+                }
+            } catch (Exception e) {
+                PaceManTracker.logWarning("Invalid/Corrupted Atum settings found in " + oldAtumPropPath);
+                PaceManTracker.logWarning("If you are using the newer Atum with more world generation options, you should delete the old config file.");
+                return false;
+            }
         }
 
-        if (newExists && !PaceManTracker.areNewAtumSettingsGood(newAtumJsonPath)) {
-            PaceManTracker.logWarning("Invalid Atum settings found in " + oldAtumPropPath);
-            PaceManTracker.logWarning("If you are using the older Atum with less world generation options, you should delete the new config file.");
-            return false; // new settings exist and are bad
+        if (newExists) {
+            try {
+                if (!PaceManTracker.areNewAtumSettingsGood(newAtumJsonPath)) {
+                    PaceManTracker.logWarning("Illegal Atum settings found in " + newAtumJsonPath);
+                    PaceManTracker.logWarning("Make sure your Atum settings are set to defaults with no set seed and above peaceful difficulty.");
+                    PaceManTracker.logWarning("If you are using the older Atum with less world generation options, you should delete the new config file.");
+                    return false; // new settings exist and are bad
+                }
+            } catch (Exception e) {
+                PaceManTracker.logWarning("Invalid/Corrupted Atum settings found in " + newAtumJsonPath);
+                PaceManTracker.logWarning("If you are using the older Atum with less world generation options, you should delete the new config file.");
+                return false; // new settings exist and are bad
+            }
         }
 
         return true; // settings exists, no settings are bad
@@ -392,12 +410,8 @@ public class PaceManTracker {
                 this.setRunProgress(RunProgress.ENDED);
             }
 
-            try {
-                if (isRandomSpeedrunWorld && !PaceManTracker.areAtumSettingsGood(this.eventTracker.getWorldPath())) {
-                    this.setRunProgress(RunProgress.ENDED);
-                }
-            } catch (Exception ignored) {
-                // Damn that sucks! But it really shouldn't happen because we check if the file exists before reading.
+            if (isRandomSpeedrunWorld && !PaceManTracker.areAtumSettingsGood(this.eventTracker.getWorldPath())) {
+                this.setRunProgress(RunProgress.ENDED);
             }
 
             // If 14.1 is a newer version than the current one
