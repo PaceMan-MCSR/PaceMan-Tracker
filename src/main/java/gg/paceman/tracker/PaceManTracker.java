@@ -3,6 +3,7 @@ package gg.paceman.tracker;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import gg.paceman.tracker.util.ExceptionUtil;
 import gg.paceman.tracker.util.SleepUtil;
 import gg.paceman.tracker.util.VersionUtil;
@@ -105,11 +106,36 @@ public class PaceManTracker {
     }
 
     private static boolean areAtumSettingsGood(Path worldPath) throws IOException {
-        // .minecraft/saves/x -> .minecraft/saves -> .minecraft -> .minecraft/config -> .minecraft/config/atum -> .minecraft/config/atum/atum.properties
-        Path atumPropPath = worldPath.getParent().getParent().resolve("config").resolve("atum").resolve("atum.properties");
-        if (!Files.exists(atumPropPath)) {
-            return false;
+        // .minecraft/saves/x -> .minecraft/saves -> .minecraft/config
+        Path configPath = worldPath.getParent().resolveSibling("config");
+        // .minecraft/config -> .minecraft/config/atum -> .minecraft/config/atum/atum.properties
+        Path oldAtumPropPath = configPath.resolve("atum").resolve("atum.properties");
+        // .minecraft/config -> .minecraft/config/mcsr -> .minecraft/config/mcsr/atum.json
+        Path newAtumJsonPath = configPath.resolve("mcsr").resolve("atum.json");
+
+        boolean oldExists = Files.exists(oldAtumPropPath);
+        boolean newExists = Files.exists(newAtumJsonPath);
+        if(!(oldExists || newExists)){
+            PaceManTracker.logWarning("You must use the Atum mod "+oldAtumPropPath);
+            return false; // no settings exist
         }
+
+        if(oldExists && !PaceManTracker.areOldAtumSettingsGood(oldAtumPropPath)){
+            PaceManTracker.logWarning("Invalid Atum settings found in "+oldAtumPropPath);
+            PaceManTracker.logWarning("If you are using the newer Atum with more world generation options, you should delete the old config file.");
+            return false; // old settings exist and are bad
+        }
+
+        if(newExists && !PaceManTracker.areNewAtumSettingsGood(newAtumJsonPath)){
+            PaceManTracker.logWarning("Invalid Atum settings found in "+oldAtumPropPath);
+            PaceManTracker.logWarning("If you are using the older Atum with less world generation options, you should delete the new config file.");
+            return false; // new settings exist and are bad
+        }
+
+        return true; // settings exists, no settings are bad
+    }
+
+    private static boolean areOldAtumSettingsGood(Path atumPropPath) throws IOException {
         String atumPropText = new String(Files.readAllBytes(atumPropPath));
         for (String line : atumPropText.split("\n")) {
             String[] args = line.trim().split("=");
@@ -124,6 +150,18 @@ public class PaceManTracker {
             }
         }
         return true;
+    }
+
+
+    private static boolean areNewAtumSettingsGood(Path atumJsonPath) throws IOException, JsonSyntaxException {
+        String atumJsonText = new String(Files.readAllBytes(atumJsonPath));
+        JsonObject json = new Gson().fromJson(atumJsonText, JsonObject.class);
+        return json.has("hasLegalSettings")
+                && json.get("hasLegalSettings").getAsBoolean()
+                && json.has("seed")
+                && json.get("seed").getAsString().isEmpty()
+                && json.has("difficulty")
+                && !json.get("difficulty").getAsString().equalsIgnoreCase("peaceful");
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
@@ -356,10 +394,9 @@ public class PaceManTracker {
 
             try {
                 if (isRandomSpeedrunWorld && !PaceManTracker.areAtumSettingsGood(this.eventTracker.getWorldPath())) {
-                    PaceManTracker.logWarning("Your atum settings have issues! Please ensure your atum is set to default generation type with bonus chests off!");
                     this.setRunProgress(RunProgress.ENDED);
                 }
-            } catch (IOException ignored) {
+            } catch (Exception ignored) {
                 // Damn that sucks! But it really shouldn't happen because we check if the file exists before reading.
             }
 
