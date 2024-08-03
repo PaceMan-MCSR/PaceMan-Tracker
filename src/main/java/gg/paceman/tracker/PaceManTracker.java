@@ -69,8 +69,8 @@ public class PaceManTracker {
 
     static {
         START_EVENTS_MAP.put(8, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade"))); // 1.8
-        START_EVENTS_MAP.put(14, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade"))); // 1.14
-        START_EVENTS_MAP.put(15, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade"))); // 1.15
+        START_EVENTS_MAP.put(14, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade", "rsg.obtain_gold_block"))); // 1.14
+        START_EVENTS_MAP.put(15, new HashSet<>(Arrays.asList("rsg.enter_nether", "rsg.trade", "rsg.obtain_gold_block"))); // 1.15
     }
 
     private final EventTracker eventTracker = new EventTracker(Paths.get(System.getProperty("user.home")).resolve("speedrunigt").resolve("latest_world.json").toAbsolutePath());
