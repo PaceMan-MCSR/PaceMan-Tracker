@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 public class PaceManTrackerGUI extends JFrame {
     private static PaceManTrackerGUI instance = null;
+    private static boolean RESET_STATS_OPTION_USABLE = false;
     private JCheckBox enabledCheckBox;
     private JPasswordField accessKeyField;
     private JPanel mainPanel;
@@ -47,7 +48,7 @@ public class PaceManTrackerGUI extends JFrame {
         this.enabledCheckBox.addActionListener(e -> {
             this.saveButton.setEnabled(this.hasChanges());
             if (asPlugin) {
-                this.accessKeyField.setEnabled(this.checkBoxEnabled());
+                this.updateEnabledFields();
             }
         });
         this.resetStatsEnabled.setSelected(options.resetStatsEnabled);
@@ -65,8 +66,11 @@ public class PaceManTrackerGUI extends JFrame {
             }
 
         });
+        if (!RESET_STATS_OPTION_USABLE) {
+            this.remove(this.resetStatsEnabled);
+        }
         if (asPlugin) {
-            this.accessKeyField.setEnabled(options.enabledForPlugin);
+            this.updateEnabledFields();
         }
         this.saveButton.addActionListener(e -> this.save());
         this.saveButton.setEnabled(this.hasChanges());
@@ -74,7 +78,7 @@ public class PaceManTrackerGUI extends JFrame {
         this.testButton.addActionListener(e -> this.onPressTest());
 
         this.revalidate();
-        this.setMinimumSize(new Dimension(300, asPlugin ? 140 : 120));
+        this.setMinimumSize(new Dimension(300, (asPlugin ? 140 : 120) + (RESET_STATS_OPTION_USABLE ? 20 : 0)));
         this.pack();
         this.setResizable(false);
         this.setVisible(true);
@@ -90,6 +94,13 @@ public class PaceManTrackerGUI extends JFrame {
             instance.requestFocus();
         }
         return instance;
+    }
+
+    private void updateEnabledFields() {
+        this.accessKeyField.setEnabled(this.checkBoxEnabled());
+        if (RESET_STATS_OPTION_USABLE) {
+            this.resetStatsEnabled.setEnabled(this.checkBoxEnabled());
+        }
     }
 
     private void onPressTest() {
