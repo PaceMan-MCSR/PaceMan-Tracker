@@ -21,8 +21,12 @@ public class UpdateUtil {
         Version latestVersion = UpdateUtil.getLatestGithubVersion();
 
         if (latestVersion.compareTo(currentVersion) > 0) {
-            if (0 == JOptionPane.showConfirmDialog(gui, "An update is available (v" + latestVersion + "), would you like to go to the latest release page?", "PaceMan Tracker: Update Available", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
-                Desktop.getDesktop().browse(URI.create("https://github.com/" + GH_REPO_LOCATION + "/releases/latest"));
+            if (gui != null) {
+                if (0 == JOptionPane.showConfirmDialog(gui, "An update is available (v" + latestVersion + "), would you like to go to the latest release page?", "PaceMan Tracker: Update Available", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                    Desktop.getDesktop().browse(URI.create("https://github.com/" + GH_REPO_LOCATION + "/releases/latest"));
+                }
+            } else {
+                PaceManTracker.logWarning("You are not on the latest version! (v" + latestVersion + ")");
             }
         }
     }
