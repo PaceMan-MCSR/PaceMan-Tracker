@@ -26,7 +26,7 @@ public class UpdateUtil {
                     Desktop.getDesktop().browse(URI.create("https://github.com/" + GH_REPO_LOCATION + "/releases/latest"));
                 }
             } else {
-                PaceManTracker.logWarning("You are not on the latest version! (v" + latestVersion + ")");
+                PaceManTracker.logWarning("You are not on the latest version (v" + latestVersion + ")! You can get the latest here: https://github.com/" + GH_REPO_LOCATION + "/releases/latest");
             }
         }
     }
