@@ -223,7 +223,7 @@ public class PaceManTracker {
         }
     }
 
-    public PaceManResponse sendEventsToPacemanGG() {
+    private PaceManResponse sendEventsToPacemanGG() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
 
         JsonObject eventModelInput = new JsonObject();
@@ -287,7 +287,7 @@ public class PaceManTracker {
         return Optional.empty();
     }
 
-    public PaceManResponse sendCancelToPacemanGG() {
+    private PaceManResponse sendCancelToPacemanGG() {
         JsonObject eventModelInput = new JsonObject();
         // Access Key
         eventModelInput.addProperty("accessKey", PaceManTrackerOptions.getInstance().accessKey);
@@ -557,6 +557,7 @@ public class PaceManTracker {
         }
 
         PaceManResponse(Type type, Throwable t) {
+            this.type = type;
             this.error = t;
         }
 
