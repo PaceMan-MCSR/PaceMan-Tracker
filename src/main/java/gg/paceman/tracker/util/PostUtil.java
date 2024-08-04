@@ -29,7 +29,7 @@ public final class PostUtil {
                 os.write(input, 0, input.length);
             }
             int responseCode = connection.getResponseCode();
-            String message = responseCode >= 400 ? readStream(connection.getErrorStream()) : connection.getResponseMessage();
+            String message = responseCode >= 400 ? PostUtil.readStream(connection.getErrorStream()) : connection.getResponseMessage();
 
 
             // Return the response code

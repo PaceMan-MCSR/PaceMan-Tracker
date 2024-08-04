@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 public class PaceManTrackerGUI extends JFrame {
     private static PaceManTrackerGUI instance = null;
-    private static boolean RESET_STATS_OPTION_USABLE = false;
+    private static final boolean RESET_STATS_OPTION_USABLE = false;
     private JCheckBox enabledCheckBox;
     private JPasswordField accessKeyField;
     private JPanel mainPanel;
