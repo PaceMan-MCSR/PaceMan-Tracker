@@ -98,9 +98,10 @@ public class PaceManTrackerGUI extends JFrame {
     }
 
     private void updateEnabledFields() {
-        this.accessKeyField.setEnabled(this.checkBoxEnabled());
+        boolean enabled = !this.asPlugin || this.checkBoxEnabled();
+        this.accessKeyField.setEnabled(enabled);
         if (RESET_STATS_OPTION_USABLE) {
-            this.resetStatsEnabled.setEnabled(this.checkBoxEnabled());
+            this.resetStatsEnabled.setEnabled(enabled);
         }
     }
 
