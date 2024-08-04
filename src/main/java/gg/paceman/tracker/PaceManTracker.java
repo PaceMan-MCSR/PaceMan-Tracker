@@ -10,7 +10,7 @@ import gg.paceman.tracker.util.SleepUtil;
 import gg.paceman.tracker.util.VersionUtil;
 
 import javax.annotation.Nullable;
-import java.io.*;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -181,19 +181,17 @@ public class PaceManTracker {
     }
 
     private static PaceManResponse sendToPacemanGG(String toSend) {
-        int responseCode;
+        PostUtil.PostResponse response;
         try {
-            PostUtil.PostResponse out = PostUtil.sendData(PACEMANGG_EVENT_ENDPOINT, toSend);
-            responseCode = out.code;
-            PaceManTracker.logDebug("Response " + responseCode + ": " + out.message);
+            response = PostUtil.sendData(PACEMANGG_EVENT_ENDPOINT, toSend);
         } catch (IOException e) {
-            return PaceManResponse.SEND_ERROR;
+            return new PaceManResponse(PaceManResponse.Type.SEND_ERROR, e);
         }
 
-        if (responseCode < MIN_DENY_CODE) {
-            return PaceManResponse.SUCCESS;
+        if (response.code < MIN_DENY_CODE) {
+            return new PaceManResponse(PaceManResponse.Type.SUCCESS, response.message);
         } else {
-            return PaceManResponse.DENIED;
+            return new PaceManResponse(PaceManResponse.Type.DENIED, response.message);
         }
     }
 
@@ -268,7 +266,7 @@ public class PaceManTracker {
 
         PaceManResponse response = PaceManTracker.sendToPacemanGG(toSend);
 
-        if (response == PaceManResponse.SUCCESS && !this.runOnPaceMan && this.headerToSend != null) {
+        if (response.type == PaceManResponse.Type.SUCCESS && !this.runOnPaceMan && this.headerToSend != null) {
             PaceManTracker.logDebug("Submitting reset stats");
             try {
                 this.stateTracker.dumpStats(eventModelInput);
@@ -470,9 +468,9 @@ public class PaceManTracker {
         PaceManTracker.logDebug("Telling Paceman to cancel the run.");
         int tries = 0;
         // While sending gives back an error
-        while (PaceManResponse.SEND_ERROR == (
+        while (PaceManResponse.Type.SEND_ERROR == (
                 this.sendCancelToPacemanGG()
-        )) {
+        ).type) {
             if (++tries < 5) {
                 // Wait 5 seconds on failure before retry.
                 PaceManTracker.logError("Failed to tell PaceMan.gg to cancel the run, retrying in 5 seconds...");
@@ -494,7 +492,7 @@ public class PaceManTracker {
         PaceManResponse response;
         int tries = 0;
         // While sending gives back an error
-        while (PaceManResponse.SEND_ERROR == (response = this.sendEventsToPacemanGG())) {
+        while (PaceManResponse.Type.SEND_ERROR == (response = this.sendEventsToPacemanGG()).type) {
             if (++tries < 5) {
                 // Wait 5 seconds on failure before retry.
                 PaceManTracker.logError("Failed to send to PaceMan.gg, retrying in 5 seconds...");
@@ -503,11 +501,11 @@ public class PaceManTracker {
                 break;
             }
         }
-        if (response == PaceManResponse.DENIED) {
+        if (response.type == PaceManResponse.Type.DENIED) {
             // Deny response = cancel the run
             PaceManTracker.logError("PaceMan.gg denied run data, no more data will be sent for this run.");
             this.endRun();
-        } else if (response == PaceManResponse.SEND_ERROR) {
+        } else if (response.type == PaceManResponse.Type.SEND_ERROR) {
             PaceManTracker.logError("Failed to send to PaceMan.gg after a couple tries, no more data will be sent for this run.");
             this.endRun();
         } else {
@@ -547,10 +545,26 @@ public class PaceManTracker {
         NONE, STARTING, PACING, ENDED
     }
 
-    public enum PaceManResponse {
-        SUCCESS, // 201 response
-        DENIED, // non 201 response
-        SEND_ERROR // error while trying to send
+    @SuppressWarnings("")
+    static class PaceManResponse {
+        Type type;
+        @Nullable String message = null;
+        @Nullable Throwable error = null;
+
+        PaceManResponse(Type type, String message) {
+            this.type = type;
+            this.message = message;
+        }
+
+        PaceManResponse(Type type, Throwable t) {
+            this.error = t;
+        }
+
+        enum Type {
+            SUCCESS, // < 400 response
+            DENIED, // >= 400 response
+            SEND_ERROR // error while trying to send
+        }
     }
 
 }
