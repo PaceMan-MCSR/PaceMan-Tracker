@@ -5,13 +5,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import gg.paceman.tracker.util.ExceptionUtil;
+import gg.paceman.tracker.util.PostUtil;
 import gg.paceman.tracker.util.SleepUtil;
 import gg.paceman.tracker.util.VersionUtil;
 
 import javax.annotation.Nullable;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * The actual logic and stuff for the PaceMan Tracker
@@ -185,7 +183,7 @@ public class PaceManTracker {
     private static PaceManResponse sendToPacemanGG(String toSend) {
         int responseCode;
         try {
-            PostResponse out = PaceManTracker.sendData(PACEMANGG_EVENT_ENDPOINT, toSend);
+            PostUtil.PostResponse out = PostUtil.sendData(PACEMANGG_EVENT_ENDPOINT, toSend);
             responseCode = out.code;
             PaceManTracker.logDebug("Response " + responseCode + ": " + out.message);
         } catch (IOException e) {
@@ -217,50 +215,14 @@ public class PaceManTracker {
         }
     }
 
-    public static PostResponse sendData(String endpointUrl, String jsonData) throws IOException {
-        // Create URL object
-        URL url = new URL(endpointUrl);
-        HttpURLConnection connection = null;
-        try {
-            // Open connection
-            connection = (HttpURLConnection) url.openConnection();
-
-            // Set the necessary properties
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true);
-
-            // Write JSON data to the connection output stream
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = jsonData.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-            int responseCode = connection.getResponseCode();
-            String message = responseCode >= 400 ? PaceManTracker.readStream(connection.getErrorStream()) : connection.getResponseMessage();
-
-
-            // Return the response code
-            return new PostResponse(responseCode, message);
-        } finally {
-            // Close the connection
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-    }
-
-    public static PostResponse testAccessKey(String accessKey) {
+    public static PostUtil.PostResponse testAccessKey(String accessKey) {
         JsonObject testModelInput = new JsonObject();
         testModelInput.addProperty("accessKey", accessKey);
         try {
-            return PaceManTracker.sendData(PACEMANGG_TEST_ENDPOINT, testModelInput.toString());
+            return PostUtil.sendData(PACEMANGG_TEST_ENDPOINT, testModelInput.toString());
         } catch (IOException e) {
             return null;
         }
-    }
-
-    private static String readStream(InputStream inputStream) {
-        return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
     }
 
     public PaceManResponse sendEventsToPacemanGG() {
@@ -591,21 +553,4 @@ public class PaceManTracker {
         SEND_ERROR // error while trying to send
     }
 
-    public static class PostResponse {
-        private final int code;
-        private final String message;
-
-        private PostResponse(int code, String message) {
-            this.code = code;
-            this.message = message;
-        }
-
-        public int getCode() {
-            return this.code;
-        }
-
-        public String getMessage() {
-            return this.message;
-        }
-    }
 }

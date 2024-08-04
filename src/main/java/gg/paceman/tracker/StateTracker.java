@@ -2,6 +2,7 @@ package gg.paceman.tracker;
 
 import com.google.gson.JsonObject;
 import gg.paceman.tracker.util.ExceptionUtil;
+import gg.paceman.tracker.util.PostUtil;
 import gg.paceman.tracker.util.SleepUtil;
 
 import java.io.IOException;
@@ -222,7 +223,7 @@ public class StateTracker {
         this.isNether = true;
 
         try {
-            PaceManTracker.PostResponse out = PaceManTracker.sendData(SUBMIT_STATS_ENDPOINT, input.toString());
+            PostUtil.PostResponse out = PostUtil.sendData(SUBMIT_STATS_ENDPOINT, input.toString());
             int res = out.getCode();
             PaceManTracker.logDebug("Stats Response " + res + ": " + out.getMessage());
         } catch (Throwable t) {
