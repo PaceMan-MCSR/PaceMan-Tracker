@@ -185,7 +185,7 @@ public class PaceManTracker {
         try {
             response = PostUtil.sendData(PACEMANGG_EVENT_ENDPOINT, toSend);
         } catch (IOException e) {
-            return new PaceManResponse(PaceManResponse.Type.SEND_ERROR, e);
+            return new PaceManResponse(e);
         }
 
         if (response.code < MIN_DENY_CODE) {
@@ -504,9 +504,11 @@ public class PaceManTracker {
         if (response.type == PaceManResponse.Type.DENIED) {
             // Deny response = cancel the run
             PaceManTracker.logError("PaceMan.gg denied run data, no more data will be sent for this run.");
+            PaceManTracker.logError("Deny message: " + response.message);
             this.endRun();
         } else if (response.type == PaceManResponse.Type.SEND_ERROR) {
             PaceManTracker.logError("Failed to send to PaceMan.gg after a couple tries, no more data will be sent for this run.");
+            PaceManTracker.logError("Error message: " + response.message);
             this.endRun();
         } else {
             PaceManTracker.logDebug("Successfully sent to PaceMan.gg");
@@ -548,17 +550,16 @@ public class PaceManTracker {
     @SuppressWarnings("")
     static class PaceManResponse {
         Type type;
-        @Nullable String message = null;
-        @Nullable Throwable error = null;
+        String message;
 
         PaceManResponse(Type type, String message) {
             this.type = type;
             this.message = message;
         }
 
-        PaceManResponse(Type type, Throwable t) {
-            this.type = type;
-            this.error = t;
+        PaceManResponse(Throwable t) {
+            this.type = Type.SEND_ERROR;
+            this.message = ExceptionUtil.toDetailedString(t);
         }
 
         enum Type {
