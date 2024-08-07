@@ -23,7 +23,7 @@ public class PaceManTrackerOptions {
     public String accessKey = "";
     public boolean enabledForPlugin = false;
     public boolean allowAnyWorldName = false;
-    public boolean resetStatsEnabled = true;
+    public boolean sendResetStats = false;
 
     /**
      * Load and return the options file
