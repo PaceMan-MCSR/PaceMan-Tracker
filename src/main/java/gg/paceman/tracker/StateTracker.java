@@ -190,7 +190,7 @@ public class StateTracker {
     }
 
     public void dumpStats(JsonObject data) {
-        if (!PaceManTrackerOptions.getInstance().sendResetStats) {
+        if (!PaceManTrackerOptions.getInstance().resetStatsEnabled) {
             PaceManTracker.logDebug("Not submitting stats since user opted out");
             return;
         }

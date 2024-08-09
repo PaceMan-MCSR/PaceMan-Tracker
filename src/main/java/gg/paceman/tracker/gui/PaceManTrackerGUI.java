@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 public class PaceManTrackerGUI extends JFrame {
     private static PaceManTrackerGUI instance = null;
-    private static final boolean RESET_STATS_OPTION_USABLE = false;
+    private static final boolean RESET_STATS_OPTION_USABLE = true;
     private JCheckBox enabledCheckBox;
     private JPasswordField accessKeyField;
     private JPanel mainPanel;
@@ -52,7 +52,7 @@ public class PaceManTrackerGUI extends JFrame {
                 this.updateEnabledFields();
             }
         });
-        this.resetStatsEnabled.setSelected(options.sendResetStats);
+        this.resetStatsEnabled.setSelected(options.resetStatsEnabled);
         this.resetStatsEnabled.addActionListener(e -> {
             this.saveButton.setEnabled(this.hasChanges());
         });
@@ -146,13 +146,13 @@ public class PaceManTrackerGUI extends JFrame {
 
     private boolean hasChanges() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
-        return (this.asPlugin && this.checkBoxEnabled() != options.enabledForPlugin) || (this.resetStatsEnabled() != options.sendResetStats) || (!Objects.equals(this.getKeyBoxText(), options.accessKey));
+        return (this.asPlugin && this.checkBoxEnabled() != options.enabledForPlugin) || (this.resetStatsEnabled() != options.resetStatsEnabled) || (!Objects.equals(this.getKeyBoxText(), options.accessKey));
     }
 
     private void save() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
         options.enabledForPlugin = this.checkBoxEnabled();
-        options.sendResetStats = this.resetStatsEnabled();
+        options.resetStatsEnabled = this.resetStatsEnabled();
         options.accessKey = this.getKeyBoxText().trim();
         try {
             options.save();
