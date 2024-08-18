@@ -512,11 +512,11 @@ public class PaceManTracker {
         if (response.type == PaceManResponse.Type.DENIED) {
             // Deny response = cancel the run
             PaceManTracker.logError("PaceMan.gg denied run data, no more data will be sent for this run.");
-            PaceManTracker.logError("Deny message: " + response.message);
+            PaceManTracker.logError("Deny message: " + response.message.replace(PaceManTrackerOptions.getInstance().accessKey, "KEY_HIDDEN"));
             this.endRun();
         } else if (response.type == PaceManResponse.Type.SEND_ERROR) {
             PaceManTracker.logError("Failed to send to PaceMan.gg after a couple tries, no more data will be sent for this run.");
-            PaceManTracker.logError("Error message: " + response.message);
+            PaceManTracker.logError("Error message: " + response.message.replace(PaceManTrackerOptions.getInstance().accessKey, "KEY_HIDDEN"));
             this.endRun();
         } else {
             PaceManTracker.logDebug("Successfully sent to PaceMan.gg");
