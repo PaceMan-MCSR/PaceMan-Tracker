@@ -181,9 +181,9 @@ public class PaceManTracker {
 
     private static boolean jsonHasGoodDifficulty(JsonObject json) {
         if (json.has("difficulty")) {
-            return json.get("difficulty").getAsString().equalsIgnoreCase("peaceful");
+            return !json.get("difficulty").getAsString().equalsIgnoreCase("peaceful");
         } else if (json.has("worldDifficulty")) {
-            return json.get("worldDifficulty").getAsString().equalsIgnoreCase("peaceful");
+            return !json.get("worldDifficulty").getAsString().equalsIgnoreCase("peaceful");
         }
         return false;
     }
