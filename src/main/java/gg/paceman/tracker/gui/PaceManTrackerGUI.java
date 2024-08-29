@@ -30,6 +30,10 @@ public class PaceManTrackerGUI extends JFrame {
     private final boolean asPlugin;
 
     public PaceManTrackerGUI(boolean asPlugin) {
+        this(asPlugin, true);
+    }
+
+    public PaceManTrackerGUI(boolean asPlugin, boolean actuallyShow) {
         this.setTitle("PaceMan Tracker");
         this.asPlugin = asPlugin;
 
@@ -82,7 +86,11 @@ public class PaceManTrackerGUI extends JFrame {
         this.setMinimumSize(new Dimension(300, (asPlugin ? 140 : 120) + (RESET_STATS_OPTION_USABLE ? 20 : 0)));
         this.pack();
         this.setResizable(false);
-        this.setVisible(true);
+        this.setVisible(actuallyShow);
+    }
+
+    static JPanel getJinglePanel() {
+        return new PaceManTrackerGUI(true, false).mainPanel;
     }
 
     public static PaceManTrackerGUI open(boolean asPlugin, Point initialLocation) {

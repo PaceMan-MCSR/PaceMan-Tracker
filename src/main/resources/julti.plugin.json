@@ -2,5 +2,5 @@
   "name": "PaceMan Tracker",
   "id": "paceman-tracker",
   "version": "${version}",
-  "initializer": "gg.paceman.tracker.launching.PaceManTrackerPluginInit"
+  "initializer": "gg.paceman.tracker.launching.PaceManTrackerJultiPluginInit"
 }

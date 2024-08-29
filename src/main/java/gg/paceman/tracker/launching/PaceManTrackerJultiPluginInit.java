@@ -24,21 +24,21 @@ import java.util.Optional;
 /**
  * Launches PaceMan Tracker as a Julti Plugin
  */
-public class PaceManTrackerPluginInit implements PluginInitializer {
+public class PaceManTrackerJultiPluginInit implements PluginInitializer {
     private static LockUtil.LockStuff lockStuff;
     private static boolean shouldRun = true;
 
     public static void main(String[] args) throws IOException {
         // This is only used to test the plugin in the dev environment
-        // PaceManTrackerPluginInit.main itself is never used when users run Julti
+        // PaceManTrackerJultiPluginInit.main itself is never used when users run Julti
 
         // Run this in dev to test as Julti plugin
 
         PluginManager.JultiPluginData pluginData = PluginManager.JultiPluginData.fromString(
-                Resources.toString(Resources.getResource(PaceManTrackerPluginInit.class, "/julti.plugin.json"), Charset.defaultCharset())
+                Resources.toString(Resources.getResource(PaceManTrackerJultiPluginInit.class, "/julti.plugin.json"), Charset.defaultCharset())
         );
         PaceManTracker.VERSION = pluginData.version;
-        JultiAppLaunch.launchWithDevPlugin(args, pluginData, new PaceManTrackerPluginInit());
+        JultiAppLaunch.launchWithDevPlugin(args, pluginData, new PaceManTrackerJultiPluginInit());
     }
 
     private static void checkLock() {
@@ -63,8 +63,8 @@ public class PaceManTrackerPluginInit implements PluginInitializer {
     @Override
     public void initialize() {
         PaceManTrackerOptions.ensurePaceManDir();
-        PaceManTrackerPluginInit.setLoggers();
-        PaceManTrackerPluginInit.checkLock();
+        PaceManTrackerJultiPluginInit.setLoggers();
+        PaceManTrackerJultiPluginInit.checkLock();
         if (!shouldRun) {
             return;
         }
