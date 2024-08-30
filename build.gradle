@@ -39,7 +39,7 @@ processResources {
     // Totally stolen from Fabric
     inputs.property "version", project.version
 
-    filesMatching("julti.plugin.json") {
+    filesMatching("*.plugin.json") {
         expand "version": project.version
     }
 }
@@ -57,6 +57,8 @@ jar {
     // Main jar is not a plugin
     exclude "julti.plugin.json"
     exclude "jingle.plugin.json"
+    exclude "gg/paceman/tracker/launching/PaceManTrackerJinglePluginInit.class"
+    exclude "gg/paceman/tracker/launching/PaceManTrackerJultiPluginInit.class"
 }
 
 tasks.register('jultiPluginJar', Jar) {
