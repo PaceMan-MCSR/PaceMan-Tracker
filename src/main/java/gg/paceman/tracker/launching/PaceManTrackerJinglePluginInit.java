@@ -44,7 +44,7 @@ public class PaceManTrackerJinglePluginInit {
             shouldRun = false;
         } else {
             lockStuff = LockUtil.lock(lockPath);
-            PluginEvents.RunnableEventType.STOP.register(() -> LockUtil.releaseLock(lockStuff));
+            PluginEvents.STOP.register(() -> LockUtil.releaseLock(lockStuff));
             Runtime.getRuntime().addShutdownHook(new Thread(() -> LockUtil.releaseLock(lockStuff)));
         }
     }
@@ -76,7 +76,7 @@ public class PaceManTrackerJinglePluginInit {
         }
         PaceManTracker tracker = PaceManTracker.getInstance();
         tracker.start(true);
-        PluginEvents.RunnableEventType.STOP.register(tracker::stop);
+        PluginEvents.STOP.register(tracker::stop);
 
         JingleGUI.addPluginTab("PaceMan Tracker", PaceManTrackerPanel.getPanel());
     }
