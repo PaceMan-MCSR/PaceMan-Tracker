@@ -28,6 +28,7 @@ public class EventTracker {
     private String currentHeader = "";
     private String srIGTVersion = "";
     private String gameVersion = "";
+    private String category = "";
     private boolean headerChanged = false;
     private List<String> latestNewLines = Collections.emptyList();
 
@@ -157,6 +158,7 @@ public class EventTracker {
 
         this.srIGTVersion = json.has("mod_version") ? (json.get("mod_version").getAsString().split("\\+")[0]) : "14.0";
         this.gameVersion = json.get("version").getAsString();
+        this.category = json.get("category").getAsString();
         this.failuresInARow = 0;
         this.currentHeader = newHeader;
         this.headerChanged = true;
@@ -168,5 +170,9 @@ public class EventTracker {
 
     public Path getWorldPath() {
         return this.worldPath;
+    }
+
+    public String getCategory() {
+        return this.category;
     }
 }

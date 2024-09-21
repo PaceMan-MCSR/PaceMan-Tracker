@@ -412,6 +412,12 @@ public class PaceManTracker {
             return;
         }
 
+        if (!this.eventTracker.getCategory().equals("ANY")) {
+            PaceManTracker.logWarning("SpeedRunIGT category is not set to Any%, please set it to Any% if you are playing Any%!");
+            this.endRun();
+            return;
+        }
+
         boolean shouldDump = this.runOnPaceMan;
 
         for (String line : latestNewLines) {
