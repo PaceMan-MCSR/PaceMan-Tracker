@@ -31,7 +31,7 @@ public class PaceManTrackerJarLaunch {
             PaceManTrackerJarLaunch.checkLock();
         }
 
-        PaceManTrackerOptions.load().save();
+        PaceManTrackerOptions.tryLoad().save();
         PaceManTrackerGUI gui = null;
         if (!PaceManTrackerJarLaunch.args.contains("--nogui")) {
             gui = PaceManTrackerGUI.open(false, null);

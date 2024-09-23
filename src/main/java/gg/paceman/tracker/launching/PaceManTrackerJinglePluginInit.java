@@ -64,7 +64,7 @@ public class PaceManTrackerJinglePluginInit {
             return;
         }
         try {
-            PaceManTrackerOptions.load().save();
+            PaceManTrackerOptions.tryLoad().save();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

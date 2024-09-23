@@ -69,7 +69,7 @@ public class PaceManTrackerJultiPluginInit implements PluginInitializer {
             return;
         }
         try {
-            PaceManTrackerOptions.load().save();
+            PaceManTrackerOptions.tryLoad().save();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

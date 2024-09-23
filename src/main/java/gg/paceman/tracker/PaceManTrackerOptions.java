@@ -2,6 +2,8 @@ package gg.paceman.tracker;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import gg.paceman.tracker.util.ExceptionUtil;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,7 +30,7 @@ public class PaceManTrackerOptions {
     /**
      * Load and return the options file
      */
-    public static PaceManTrackerOptions load() throws IOException {
+    public static PaceManTrackerOptions load() throws IOException, JsonSyntaxException {
         if (Files.exists(SAVE_PATH)) {
             instance = GSON.fromJson(new String(Files.readAllBytes(SAVE_PATH)), PaceManTrackerOptions.class);
         } else if (Files.exists(OLD_SAVE_PATH)) {
@@ -38,6 +40,15 @@ public class PaceManTrackerOptions {
             instance = new PaceManTrackerOptions();
         }
         return instance;
+    }
+
+    public static PaceManTrackerOptions tryLoad() {
+        try {
+            return PaceManTrackerOptions.load();
+        } catch (Exception e) {
+            PaceManTracker.logError("Failed to load PaceMan Tracker options.json! Access key is now lost!\n" + ExceptionUtil.toDetailedString(e));
+        }
+        return (instance = new PaceManTrackerOptions());
     }
 
     public static PaceManTrackerOptions getInstance() {
