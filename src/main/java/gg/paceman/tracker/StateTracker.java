@@ -41,6 +41,8 @@ public class StateTracker {
     private long playingStart = 0;
     private long playTime = 0;
     private long wallTime = 0;
+    private long pauseStart = 0;
+    private long pauseTime = 0;
 
     public void start() {
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
@@ -81,6 +83,10 @@ public class StateTracker {
         }
     }
 
+    private boolean isPlaying(State state) {
+        return state == State.PLAYING || state == State.PAUSED;
+    }
+
     public void tick() throws IOException {
         if (!this.hasStateFile) {
             return;
@@ -96,13 +102,18 @@ public class StateTracker {
         String state = "";
         for (int i = 0; i < 5; i++) {
             state = new String(Files.readAllBytes(this.statePath), StandardCharsets.UTF_8);
-            switch (state.split(",")[0]) {
+            String[] parts = state.split(",");
+            switch (parts[0]) {
                 case "wall":
                 case "previewing":
                     newState = State.WALL;
                     break;
                 case "inworld":
-                    newState = State.PLAYING;
+                    if(parts[1].equals("paused")){
+                        newState = State.PAUSED;
+                    } else {
+                        newState = State.PLAYING;
+                    }
                     break;
                 case "generating":
                 case "waiting":
@@ -122,8 +133,14 @@ public class StateTracker {
             return;
         }
 
+        if(newState == State.PAUSED){
+            this.pauseStart = newLM;
+        } else if (oldState == State.PAUSED){
+            this.pauseTime = newLM - this.pauseStart;
+        }
+
         // joined instance
-        if (oldState != State.PLAYING && newState == State.PLAYING) {
+        if (!isPlaying(oldState) && isPlaying(newState)) {
             this.playingStart = newLM;
             if (oldState != State.UNKNOWN) {
                 // don't increment seeds played counter when tracker is restarted while in a world
@@ -132,11 +149,12 @@ public class StateTracker {
         }
 
         // left instance
-        if (oldState == State.PLAYING && newState != State.PLAYING) {
+        if (isPlaying(oldState) && !isPlaying(newState)) {
             if (!this.isPracticing && !this.isNether) {
                 // commit playtime
                 long playDiff = Math.min(this.maxPlayTime, newLM - this.playingStart);
-                this.playTime += playDiff;
+                this.playTime += playDiff - this.pauseTime;
+                this.pauseTime = 0;
             }
             this.isPracticing = false;
             this.isNether = false;
@@ -244,7 +262,7 @@ public class StateTracker {
     }
 
     private enum State {
-        UNKNOWN, IDLE, WALL, LOADING, PLAYING
+        UNKNOWN, IDLE, WALL, LOADING, PLAYING, PAUSED
     }
 
 }
