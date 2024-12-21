@@ -60,6 +60,8 @@ public class PaceManTracker {
     public static Consumer<String> errorConsumer = System.out::println;
     public static Consumer<String> warningConsumer = System.out::println;
 
+    public static Runnable jingleQABRefresh = () -> {
+    };
 
     public static final String PACEMANGG_EVENT_ENDPOINT = "https://paceman.gg/api/sendevent";
     private static final String PACEMANGG_TEST_ENDPOINT = "https://paceman.gg/api/test";

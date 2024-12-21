@@ -2,7 +2,7 @@ package gg.paceman.tracker.gui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.uiDesigner.core.Spacer;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,13 +10,16 @@ import java.awt.*;
 public class PaceManTrackerPanel {
     private JPanel mainPanel;
     private JPanel trackerPanel;
+    private PaceManTrackerGUI gui;
 
-    public static JPanel getPanel() {
-        return new PaceManTrackerPanel().mainPanel;
+    public static Pair<PaceManTrackerGUI, JPanel> getNewGUIAsPanel() {
+        PaceManTrackerPanel paceManTrackerPanel = new PaceManTrackerPanel();
+        return Pair.of(paceManTrackerPanel.gui, paceManTrackerPanel.trackerPanel);
     }
 
     private void createUIComponents() {
-        this.trackerPanel = PaceManTrackerGUI.getJinglePanel();
+        this.gui = PaceManTrackerGUI.getHeadless();
+        this.trackerPanel = this.gui.getMainPanel();
     }
 
     {
