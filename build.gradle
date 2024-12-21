@@ -26,7 +26,7 @@ dependencies {
     // Choose Julti version: https://jitpack.io/#DuncanRuns/Julti/
     implementation 'com.github.DuncanRuns:Julti:v1.6.0'
     // Choose Jingle version: https://jitpack.io/#DuncanRuns/Jingle/
-    implementation 'com.github.DuncanRuns:Jingle:08b48bb9ed'
+    implementation 'com.github.DuncanRuns:Jingle:eeb4291b13'
 
     provided 'com.jetbrains.intellij.java:java-gui-forms-rt:203.7148.30'
     provided 'com.google.code.gson:gson:2.10'
