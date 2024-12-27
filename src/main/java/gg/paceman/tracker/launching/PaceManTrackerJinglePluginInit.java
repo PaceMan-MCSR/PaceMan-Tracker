@@ -3,8 +3,10 @@ package gg.paceman.tracker.launching;
 import com.google.common.io.Resources;
 import gg.paceman.tracker.PaceManTracker;
 import gg.paceman.tracker.PaceManTrackerOptions;
+import gg.paceman.tracker.gui.PaceManTrackerGUI;
 import gg.paceman.tracker.gui.PaceManTrackerPanel;
 import gg.paceman.tracker.util.LockUtil;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Level;
 import xyz.duncanruns.jingle.Jingle;
 import xyz.duncanruns.jingle.JingleAppLaunch;
@@ -12,6 +14,7 @@ import xyz.duncanruns.jingle.gui.JingleGUI;
 import xyz.duncanruns.jingle.plugin.PluginEvents;
 import xyz.duncanruns.jingle.plugin.PluginManager;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -78,6 +81,34 @@ public class PaceManTrackerJinglePluginInit {
         tracker.start(true);
         PluginEvents.STOP.register(tracker::stop);
 
-        JingleGUI.addPluginTab("PaceMan Tracker", PaceManTrackerPanel.getPanel());
+        Pair<PaceManTrackerGUI, JPanel> guiPair = PaceManTrackerPanel.getNewGUIAsPanel();
+        PaceManTrackerGUI paceManTrackerGUI = guiPair.getLeft();
+        JPanel pmtPanel = guiPair.getRight();
+
+        JingleGUI.addPluginTab("PaceMan Tracker", pmtPanel);
+
+        JingleGUI.get().registerQuickActionButton(0, () -> {
+            PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+            if (options == null) return null;
+            if (options.accessKey.isEmpty()) return null;
+            return JingleGUI.makeButton(
+                    options.enabledForPlugin ? "Disable PaceMan" : "Enable PaceMan",
+                    () -> {
+                        options.enabledForPlugin = !options.enabledForPlugin;
+                        paceManTrackerGUI.enabledCheckBox.setSelected(options.enabledForPlugin);
+                        JingleGUI.get().refreshQuickActions();
+                        JingleGUI.get().refreshHack();
+                        try {
+                            options.save();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    },
+                    () -> JingleGUI.get().openTab(pmtPanel),
+                    "Right Click to Configure",
+                    true
+            );
+        });
+        PaceManTracker.jingleQABRefresh = () -> JingleGUI.get().refreshQuickActions();
     }
 }

@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 public class PaceManTrackerGUI extends JFrame {
     private static PaceManTrackerGUI instance = null;
     private static final boolean RESET_STATS_OPTION_USABLE = true;
-    private JCheckBox enabledCheckBox;
+    public JCheckBox enabledCheckBox;
     private JPasswordField accessKeyField;
     private JPanel mainPanel;
     private JButton saveButton;
@@ -89,8 +89,12 @@ public class PaceManTrackerGUI extends JFrame {
         this.setVisible(actuallyShow);
     }
 
-    static JPanel getJinglePanel() {
-        return new PaceManTrackerGUI(true, false).mainPanel;
+    static PaceManTrackerGUI getHeadless() {
+        return new PaceManTrackerGUI(true, false);
+    }
+
+    public JPanel getMainPanel() {
+        return this.mainPanel;
     }
 
     public static PaceManTrackerGUI open(boolean asPlugin, Point initialLocation) {
@@ -168,6 +172,7 @@ public class PaceManTrackerGUI extends JFrame {
             throw new RuntimeException(ex);
         }
         this.updateButtons();
+        PaceManTracker.jingleQABRefresh.run();
     }
 
     private void updateButtons() {
