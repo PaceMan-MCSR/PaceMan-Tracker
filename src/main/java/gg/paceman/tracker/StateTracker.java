@@ -19,6 +19,8 @@ public class StateTracker {
     private final int breakThreshold = 5000;
     // cap each overworld segment to at most 10 minutes in case of afk
     private final int maxPlayTime = 1000 * 60 * 10;
+    // reset stats after no state changes for 1 hour
+    private final int maxAFKTime = 1000 * 60 * 60;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private Path lastWorldPath;
@@ -112,6 +114,11 @@ public class StateTracker {
         long newLM = Files.getLastModifiedTime(this.statePath).toMillis();
         if (newLM == this.stateLastMod) {
             return;
+        }
+        long diff = newLM - this.stateLastMod;
+        if(diff > this.maxAFKTime){
+            PaceManTracker.logDebug("AFK for " + diff + "ms, resetting stats");
+            this.reset();
         }
         this.stateLastMod = newLM;
 
