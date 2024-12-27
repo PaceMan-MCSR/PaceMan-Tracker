@@ -22,6 +22,7 @@ public class StateTracker {
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private Path lastWorldPath;
+    private Path instPath;
     private Path statePath;
     private boolean hasStateFile = false;
     private long stateLastMod = -1;
@@ -49,6 +50,18 @@ public class StateTracker {
         this.executor.scheduleAtFixedRate(this::tryTick, 0, 50, TimeUnit.MILLISECONDS);
     }
 
+    public void reset() {
+        this.resets = 0;
+        this.lastResets = 0;
+        this.lastWallReset = 0;
+        this.seedsPlayed = 0;
+        this.playingStart = 0;
+        this.playTime = 0;
+        this.wallTime = 0;
+        this.pauseStart = 0;
+        this.pauseTime = 0;
+    }
+
     public void tickInstPath() {
         Thread.currentThread().setName("state-tick-inst");
         Path worldPath = PaceManTracker.getInstance().getWorldPath();
@@ -64,6 +77,11 @@ public class StateTracker {
 
         // Random Speedrun #X -> saves -> .minecraft
         Path instFolder = worldPath.getParent().getParent();
+        if(!instFolder.equals(this.instPath)){
+            this.instPath = instFolder;
+            PaceManTracker.logDebug("New instance folder: " + instFolder);
+            this.reset();
+        }
 
         this.statePath = instFolder.resolve("wpstateout.txt");
         this.resetsPath = instFolder.resolve("config/mcsr/atum/rsg-attempts.txt");
