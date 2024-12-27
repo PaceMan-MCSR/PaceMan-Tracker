@@ -66,6 +66,8 @@ public class StateTracker {
         this.pauseTime = 0;
         this.netherStart = 0;
         this.netherTime = 0;
+        this.stateLastMod = -1;
+        this.resetsLastMod = -1;
     }
 
     public void tickInstPath() {
