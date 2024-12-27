@@ -122,7 +122,7 @@ public class StateTracker {
             return;
         }
         long diff = newLM - this.stateLastMod;
-        if(diff > this.maxAFKTime){
+        if(this.stateLastMod != -1 && diff > this.maxAFKTime){
             PaceManTracker.logDebug("AFK for " + diff + "ms, resetting stats");
             this.reset();
         }
