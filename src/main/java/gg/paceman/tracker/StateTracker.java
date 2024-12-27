@@ -259,9 +259,11 @@ public class StateTracker {
         long diff = Math.min(this.maxPlayTime, System.currentTimeMillis() - this.playingStart);
         this.playTime += diff;
 
+        String accessKey = data.get("accessKey").getAsString();
+
         JsonObject input = new JsonObject();
         input.addProperty("gameData", gameData.toString());
-        input.addProperty("accessKey", data.get("accessKey").getAsString());
+        input.addProperty("accessKey", accessKey);
         input.addProperty("wallTime", this.wallTime);
         input.addProperty("playTime", this.playTime);
         input.addProperty("netherTime", this.netherTime);
@@ -277,6 +279,8 @@ public class StateTracker {
         this.netherStart = System.currentTimeMillis();
 
         try {
+            String toSend = input.toString();
+            PaceManTracker.logDebug("Sending reset stats: " + toSend.replace(accessKey, "KEY_HIDDEN"));
             PostUtil.PostResponse out = PostUtil.sendData(SUBMIT_STATS_ENDPOINT, input.toString());
             int res = out.getCode();
             PaceManTracker.logDebug("Stats Response " + res + ": " + out.getMessage());
