@@ -46,6 +46,8 @@ public class StateTracker {
     private long wallTime = 0;
     private long pauseStart = 0;
     private long pauseTime = 0;
+    private long netherStart = 0;
+    private long netherTime = 0;
 
     public void start() {
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
@@ -62,6 +64,8 @@ public class StateTracker {
         this.wallTime = 0;
         this.pauseStart = 0;
         this.pauseTime = 0;
+        this.netherStart = 0;
+        this.netherTime = 0;
     }
 
     public void tickInstPath() {
@@ -182,6 +186,9 @@ public class StateTracker {
                 this.pauseTime = 0;
             }
             this.isPracticing = false;
+            if(this.isNether){
+                this.netherTime += newLM - this.netherStart;
+            }
             this.isNether = false;
         }
 
@@ -255,6 +262,7 @@ public class StateTracker {
         input.addProperty("accessKey", data.get("accessKey").getAsString());
         input.addProperty("wallTime", this.wallTime);
         input.addProperty("playTime", this.playTime);
+        input.addProperty("netherTime", this.netherTime);
         input.addProperty("seedsPlayed", this.seedsPlayed);
         input.addProperty("resets", newResets);
         input.addProperty("totalResets", this.resets);
@@ -264,6 +272,7 @@ public class StateTracker {
         this.wallTime = 0;
         this.seedsPlayed = 0;
         this.isNether = true;
+        this.netherStart = System.currentTimeMillis();
 
         try {
             PostUtil.PostResponse out = PostUtil.sendData(SUBMIT_STATS_ENDPOINT, input.toString());
