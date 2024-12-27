@@ -51,7 +51,7 @@ public class StateTracker {
 
     public void start() {
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
-        this.executor.scheduleAtFixedRate(this::tryTick, 0, 50, TimeUnit.MILLISECONDS);
+        this.executor.scheduleAtFixedRate(this::tryTick, 0, 25, TimeUnit.MILLISECONDS);
     }
 
     public void reset() {
