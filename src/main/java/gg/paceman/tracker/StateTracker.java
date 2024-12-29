@@ -39,6 +39,7 @@ public class StateTracker {
 
     private boolean isPracticing = false;
     private boolean isNether = false;
+    private boolean isEnabled = false;
 
     private int seedsPlayed = 0;
     private long playingStart = 0;
@@ -50,6 +51,7 @@ public class StateTracker {
     private long netherTime = 0;
 
     public void start() {
+        this.executor.scheduleAtFixedRate(this::tickResetCheck, 0, 3, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::tryTick, 0, 25, TimeUnit.MILLISECONDS);
     }
@@ -68,6 +70,21 @@ public class StateTracker {
         this.netherTime = 0;
         this.stateLastMod = -1;
         this.resetsLastMod = -1;
+    }
+
+    public void tickResetCheck() {
+        Thread.currentThread().setName("state-tick-reset");
+        PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+
+        boolean wasEnabled = this.isEnabled;
+        this.isEnabled = options.resetStatsEnabled && options.enabledForPlugin;
+
+        if (this.isEnabled && !wasEnabled) {
+            PaceManTracker.logDebug("Reset stats enabled");
+            this.reset();
+        } else if (!this.isEnabled && wasEnabled) {
+            PaceManTracker.logDebug("Reset stats disabled");
+        }
     }
 
     public void tickInstPath() {
