@@ -98,7 +98,13 @@ public class StateTracker {
 
         boolean allowAnyWorldName = PaceManTrackerOptions.getInstance().allowAnyWorldName;
         boolean isRandomSpeedrunWorld = PaceManTracker.RANDOM_WORLD_PATTERN.matcher(worldPath.getFileName().toString()).matches();
+
+        boolean wasPracticing = this.isPracticing;
         this.isPracticing = !allowAnyWorldName && !isRandomSpeedrunWorld;
+        if(wasPracticing && !this.isPracticing){
+            PaceManTracker.logDebug("Stopped practicing, resetting stats");
+            this.reset();
+        }
 
         // Random Speedrun #X -> saves -> .minecraft
         Path instFolder = worldPath.getParent().getParent();
