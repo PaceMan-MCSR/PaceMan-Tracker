@@ -299,6 +299,7 @@ public class StateTracker {
         this.wallTime = 0;
         this.seedsPlayed = 0;
         this.isNether = true;
+        this.netherTime = 0;
         this.netherStart = System.currentTimeMillis();
 
         try {
