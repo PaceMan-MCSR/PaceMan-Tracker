@@ -50,7 +50,6 @@ public class ItemTracker {
         }
         stats = entries.stream().findAny().get().getValue().getAsJsonObject().getAsJsonObject("stats");
 
-        //
         if (stats.has("minecraft:picked_up")) {
             JsonObject pickedUp = stats.getAsJsonObject("minecraft:picked_up");
             for (Map.Entry<String, JsonElement> entry : pickedUp.entrySet()) {
