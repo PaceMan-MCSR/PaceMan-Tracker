@@ -47,6 +47,9 @@ public class PaceManTracker {
     private static final Set<String> IMPORTANT_ITEM_COUNTS_116 = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian", "minecraft:blaze_rod"));
     private static final Set<String> IMPORTANT_ITEM_USAGES_116 = new HashSet<>(Arrays.asList("minecraft:ender_pearl", "minecraft:obsidian"));
 
+    private static final Set<String> IMPORTANT_ITEM_COUNTS_115 = Collections.singleton("minecraft:blaze_rod");
+    private static final Set<String> IMPORTANT_ITEM_CRAFTED_115 = Collections.singleton("minecraft:ender_pearl");
+
     public static final Pattern RANDOM_WORLD_PATTERN = Pattern.compile("^Random Speedrun #\\d+$");
     private static final Pattern GAME_VERSION_PATTERN = Pattern.compile("1\\.(\\d+)(?:\\.\\d+)?");
 
@@ -292,7 +295,9 @@ public class PaceManTracker {
 
     private Optional<JsonObject> constructItemData() {
         if (this.eventTracker.getGameVersion().equals("1.16.1")) {
-            return this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS_116, IMPORTANT_ITEM_USAGES_116);
+            return this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS_116, IMPORTANT_ITEM_USAGES_116, Collections.emptySet());
+        } else if (this.eventTracker.getGameVersion().equals("1.15.2")) {
+            return this.itemTracker.constructItemData(IMPORTANT_ITEM_COUNTS_115, Collections.emptySet(), IMPORTANT_ITEM_CRAFTED_115);
         }
         return Optional.empty();
     }
@@ -390,7 +395,7 @@ public class PaceManTracker {
             }
         }
 
-        if (this.eventTracker.getGameVersion().equals("1.16.1")) {
+        if (this.eventTracker.getGameVersion().equals("1.16.1") || this.eventTracker.getGameVersion().equals("1.15.2")) {
             this.itemTracker.tryUpdate(this.eventTracker.getWorldPath());
         }
 
