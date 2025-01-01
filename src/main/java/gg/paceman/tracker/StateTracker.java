@@ -19,9 +19,12 @@ public class StateTracker {
     private final int breakThreshold = 5000;
     // cap each overworld segment to at most 10 minutes in case of afk
     private final int maxPlayTime = 1000 * 60 * 10;
+    // reset stats after no state changes for 1 hour
+    private final int maxAFKTime = 1000 * 60 * 60;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private Path lastWorldPath;
+    private Path instPath;
     private Path statePath;
     private boolean hasStateFile = false;
     private long stateLastMod = -1;
@@ -36,15 +39,52 @@ public class StateTracker {
 
     private boolean isPracticing = false;
     private boolean isNether = false;
+    private boolean isEnabled = false;
 
     private int seedsPlayed = 0;
     private long playingStart = 0;
     private long playTime = 0;
     private long wallTime = 0;
+    private long pauseStart = 0;
+    private long pauseTime = 0;
+    private long netherStart = 0;
+    private long netherTime = 0;
 
     public void start() {
+        this.executor.scheduleAtFixedRate(this::tickResetCheck, 0, 3, TimeUnit.SECONDS);
         this.executor.scheduleAtFixedRate(this::tickInstPath, 0, 1, TimeUnit.SECONDS);
-        this.executor.scheduleAtFixedRate(this::tryTick, 0, 50, TimeUnit.MILLISECONDS);
+        this.executor.scheduleAtFixedRate(this::tryTick, 0, 25, TimeUnit.MILLISECONDS);
+    }
+
+    public void reset() {
+        this.resets = 0;
+        this.lastResets = 0;
+        this.lastWallReset = 0;
+        this.seedsPlayed = 0;
+        this.playingStart = 0;
+        this.playTime = 0;
+        this.wallTime = 0;
+        this.pauseStart = 0;
+        this.pauseTime = 0;
+        this.netherStart = 0;
+        this.netherTime = 0;
+        this.stateLastMod = -1;
+        this.resetsLastMod = -1;
+    }
+
+    public void tickResetCheck() {
+        Thread.currentThread().setName("state-tick-reset");
+        PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
+
+        boolean wasEnabled = this.isEnabled;
+        this.isEnabled = options.resetStatsEnabled && PaceManTracker.getInstance().shouldRun();
+
+        if (this.isEnabled && !wasEnabled) {
+            PaceManTracker.logDebug("Reset stats enabled");
+            this.reset();
+        } else if (!this.isEnabled && wasEnabled) {
+            PaceManTracker.logDebug("Reset stats disabled");
+        }
     }
 
     public void tickInstPath() {
@@ -58,10 +98,21 @@ public class StateTracker {
 
         boolean allowAnyWorldName = PaceManTrackerOptions.getInstance().allowAnyWorldName;
         boolean isRandomSpeedrunWorld = PaceManTracker.RANDOM_WORLD_PATTERN.matcher(worldPath.getFileName().toString()).matches();
+
+        boolean wasPracticing = this.isPracticing;
         this.isPracticing = !allowAnyWorldName && !isRandomSpeedrunWorld;
+        if(wasPracticing && !this.isPracticing){
+            PaceManTracker.logDebug("Stopped practicing, resetting stats");
+            this.reset();
+        }
 
         // Random Speedrun #X -> saves -> .minecraft
         Path instFolder = worldPath.getParent().getParent();
+        if(!instFolder.equals(this.instPath)){
+            this.instPath = instFolder;
+            PaceManTracker.logDebug("New instance folder: " + instFolder);
+            this.reset();
+        }
 
         this.statePath = instFolder.resolve("wpstateout.txt");
         this.resetsPath = instFolder.resolve("config/mcsr/atum/rsg-attempts.txt");
@@ -81,6 +132,10 @@ public class StateTracker {
         }
     }
 
+    private boolean isPlaying(State state) {
+        return state == State.PLAYING || state == State.PAUSED;
+    }
+
     public void tick() throws IOException {
         if (!this.hasStateFile) {
             return;
@@ -89,6 +144,11 @@ public class StateTracker {
         if (newLM == this.stateLastMod) {
             return;
         }
+        long diff = newLM - this.stateLastMod;
+        if(this.stateLastMod != -1 && diff > this.maxAFKTime){
+            PaceManTracker.logDebug("AFK for " + diff + "ms, resetting stats");
+            this.reset();
+        }
         this.stateLastMod = newLM;
 
         State oldState = this.currentState;
@@ -96,13 +156,18 @@ public class StateTracker {
         String state = "";
         for (int i = 0; i < 5; i++) {
             state = new String(Files.readAllBytes(this.statePath), StandardCharsets.UTF_8);
-            switch (state.split(",")[0]) {
+            String[] parts = state.split(",");
+            switch (parts[0]) {
                 case "wall":
                 case "previewing":
                     newState = State.WALL;
                     break;
                 case "inworld":
-                    newState = State.PLAYING;
+                    if(parts[1].equals("paused")){
+                        newState = State.PAUSED;
+                    } else {
+                        newState = State.PLAYING;
+                    }
                     break;
                 case "generating":
                 case "waiting":
@@ -122,8 +187,14 @@ public class StateTracker {
             return;
         }
 
+        if(newState == State.PAUSED){
+            this.pauseStart = newLM;
+        } else if (oldState == State.PAUSED){
+            this.pauseTime = newLM - this.pauseStart;
+        }
+
         // joined instance
-        if (oldState != State.PLAYING && newState == State.PLAYING) {
+        if (!isPlaying(oldState) && isPlaying(newState)) {
             this.playingStart = newLM;
             if (oldState != State.UNKNOWN) {
                 // don't increment seeds played counter when tracker is restarted while in a world
@@ -132,13 +203,17 @@ public class StateTracker {
         }
 
         // left instance
-        if (oldState == State.PLAYING && newState != State.PLAYING) {
+        if (isPlaying(oldState) && !isPlaying(newState)) {
             if (!this.isPracticing && !this.isNether) {
                 // commit playtime
                 long playDiff = Math.min(this.maxPlayTime, newLM - this.playingStart);
-                this.playTime += playDiff;
+                this.playTime += playDiff - this.pauseTime;
+                this.pauseTime = 0;
             }
             this.isPracticing = false;
+            if(this.isNether){
+                this.netherTime += newLM - this.netherStart;
+            }
             this.isNether = false;
         }
 
@@ -207,11 +282,14 @@ public class StateTracker {
         long diff = Math.min(this.maxPlayTime, System.currentTimeMillis() - this.playingStart);
         this.playTime += diff;
 
+        String accessKey = data.get("accessKey").getAsString();
+
         JsonObject input = new JsonObject();
         input.addProperty("gameData", gameData.toString());
-        input.addProperty("accessKey", data.get("accessKey").getAsString());
+        input.addProperty("accessKey", accessKey);
         input.addProperty("wallTime", this.wallTime);
         input.addProperty("playTime", this.playTime);
+        input.addProperty("netherTime", this.netherTime);
         input.addProperty("seedsPlayed", this.seedsPlayed);
         input.addProperty("resets", newResets);
         input.addProperty("totalResets", this.resets);
@@ -221,8 +299,12 @@ public class StateTracker {
         this.wallTime = 0;
         this.seedsPlayed = 0;
         this.isNether = true;
+        this.netherTime = 0;
+        this.netherStart = System.currentTimeMillis();
 
         try {
+            String toSend = input.toString();
+            PaceManTracker.logDebug("Sending reset stats: " + toSend.replace(accessKey, "KEY_HIDDEN"));
             PostUtil.PostResponse out = PostUtil.sendData(SUBMIT_STATS_ENDPOINT, input.toString());
             int res = out.getCode();
             PaceManTracker.logDebug("Stats Response " + res + ": " + out.getMessage());
@@ -244,7 +326,7 @@ public class StateTracker {
     }
 
     private enum State {
-        UNKNOWN, IDLE, WALL, LOADING, PLAYING
+        UNKNOWN, IDLE, WALL, LOADING, PLAYING, PAUSED
     }
 
 }
