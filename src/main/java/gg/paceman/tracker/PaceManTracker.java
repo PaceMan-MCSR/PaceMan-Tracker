@@ -308,7 +308,7 @@ public class PaceManTracker {
         return PaceManTracker.sendToPacemanGG(eventModelInput.toString());
     }
 
-    private boolean shouldRun() {
+    public boolean shouldRun() {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
         if (options.accessKey.isEmpty()) {
             return false;

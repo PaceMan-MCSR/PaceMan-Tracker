@@ -77,7 +77,7 @@ public class StateTracker {
         PaceManTrackerOptions options = PaceManTrackerOptions.getInstance();
 
         boolean wasEnabled = this.isEnabled;
-        this.isEnabled = options.resetStatsEnabled && options.enabledForPlugin;
+        this.isEnabled = options.resetStatsEnabled && PaceManTracker.getInstance().shouldRun();
 
         if (this.isEnabled && !wasEnabled) {
             PaceManTracker.logDebug("Reset stats enabled");
