@@ -75,7 +75,7 @@ public class PaceManTrackerJarLaunch {
 
     /**
      * Checks for a `noreopen` arg, and exits the application if it is present.
-     * Only used if Jingle is already open.
+     * Only used if PMT is already open.
      */
     private static void checkNoReopen() {
         if (args.stream().map(s -> s.replace("-", "")).anyMatch("noreopen"::equalsIgnoreCase)) {
