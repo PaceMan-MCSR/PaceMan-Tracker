@@ -51,6 +51,7 @@ public class PaceManTrackerJarLaunch {
         PaceManTrackerOptions.ensurePaceManDir();
         Path lockPath = PaceManTrackerOptions.getPaceManDir().resolve("LOCK");
         if (LockUtil.isLocked(lockPath)) {
+            checkNoReopen();
             if (PaceManTrackerJarLaunch.args.contains("--nogui")) {
                 System.out.println("PaceMan Tracker is already opened, you cannot run another instance. (Not recommended: use --skiplocks to bypass)");
                 System.exit(0);
@@ -68,6 +69,17 @@ public class PaceManTrackerJarLaunch {
         boolean isJingle = LockUtil.isLocked(Paths.get(System.getProperty("user.home")).resolve(".config").resolve("Jingle").resolve("LOCK").toAbsolutePath());
         int ans = JOptionPane.showConfirmDialog(null, "PaceMan Tracker is already opened" + (isJulti ? " in Julti" : (isJingle ? " in Jingle" : "")) + "! Are you sure you want to open the tracker again?", "PaceMan Tracker: Already Opened", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (ans != 0) {
+            System.exit(0);
+        }
+    }
+
+    /**
+     * Checks for a `noreopen` arg, and exits the application if it is present.
+     * Only used if PMT is already open.
+     */
+    private static void checkNoReopen() {
+        if (args.stream().map(s -> s.replace("-", "")).anyMatch("noreopen"::equalsIgnoreCase)) {
+            System.out.println("No reopen arg is present while tracker is already open, exiting...");
             System.exit(0);
         }
     }
